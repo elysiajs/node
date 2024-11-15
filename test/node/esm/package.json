@@ -1,0 +1,7 @@
+{
+    "type": "module",
+    "dependencies": {
+        "@elysiajs/node": "../../..",
+        "elysia": "1.2.0-exp.35"
+    }
+}
