@@ -1,4 +1,4 @@
-# @elysiajs/bearer
+# @elysiajs/node
 Adapter for [elysia](https://github.com/elysiajs/elysia) to use Elysia in Nodejs environment.
 
 ## Installation
