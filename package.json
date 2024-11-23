@@ -22,7 +22,7 @@
         "@types/node": "^22.9.0",
         "@types/ws": "^8.5.13",
         "elysia": ">= 1.2.0-exp.42",
-        "eslint": "9.6.0",
+        "eslint": "9.15.0",
         "light-my-request": "^6.3.0",
         "tsup": "^8.1.0",
         "tsx": "^4.19.2",
