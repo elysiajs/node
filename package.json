@@ -1,6 +1,6 @@
 {
     "name": "@elysiajs/node",
-    "version": "1.2.0-exp.1",
+    "version": "1.2.0-exp.2",
     "description": "Plugin for Elysia for retreiving Bearer token",
     "license": "MIT",
     "scripts": {
@@ -11,16 +11,19 @@
         "release": "npm run build && npm run test && npm publish --access public"
     },
     "dependencies": {
-        "bufferutil": "^4.0.8"
+        "bufferutil": "^4.0.8",
+        "formidable": "^3.5.2"
     },
     "peerDependencies": {
-        "elysia": ">= 1.2.0-exp.35"
+        "elysia": ">= 1.2.0-exp.42"
     },
     "devDependencies": {
+        "@types/formidable": "^3.4.5",
         "@types/node": "^22.9.0",
         "@types/ws": "^8.5.13",
-        "elysia": "1.2.0-exp.35",
+        "elysia": ">= 1.2.0-exp.42",
         "eslint": "9.6.0",
+        "light-my-request": "^6.3.0",
         "tsup": "^8.1.0",
         "tsx": "^4.19.2",
         "typescript": "^5.5.3",

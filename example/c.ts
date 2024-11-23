@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { node } from '../src'
 
-const app = new Elysia({ adapter: node() })
+new Elysia({ adapter: node() })
 	.ws('/', {
 		upgrade({ set }) {
 			set.headers['a'] = 'b'

@@ -4,9 +4,8 @@ import { mockRes } from '../utils'
 import { form, file, redirect } from 'elysia'
 
 import { ElysiaFile } from 'elysia/universal/file'
-import { mapCompactResponse } from '../../src/handler'
-import { readFileToWebStandardFile } from '../../src/utils'
-import { openAsBlob } from 'fs'
+import { mapCompactResponse, mapResponse } from '../../src/handler'
+import { openAsBlob } from 'node:fs'
 
 class Student {
 	constructor(public name: string) {}
@@ -26,10 +25,17 @@ class Student {
 
 class CustomResponse extends Response {}
 
-describe('Node - Map Compact Response', () => {
+const createContext = () =>
+	({
+		cookie: {},
+		headers: {},
+		status: 200
+	}) satisfies Context['set']
+
+describe('Node - Map Response', () => {
 	it('map string', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse('Shiroko', res)
+		const [response, set] = mapResponse('Shiroko', createContext(), res)
 
 		expect(response).toBe('Shiroko')
 		expect(response).toEqual(res.body)
@@ -46,7 +52,7 @@ describe('Node - Map Compact Response', () => {
 
 	it('map number', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(1, res)
+		const [response, set] = mapResponse(1, createContext(), res)
 
 		expect(response).toBe('1')
 		expect(response).toEqual(res.body)
@@ -63,7 +69,7 @@ describe('Node - Map Compact Response', () => {
 
 	it('map boolean', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(true, res)
+		const [response, set] = mapResponse(true, createContext(), res)
 
 		expect(response).toBe('true')
 		expect(response).toEqual(res.body)
@@ -84,7 +90,7 @@ describe('Node - Map Compact Response', () => {
 			name: 'Shiroko'
 		}
 
-		const [response, set] = mapCompactResponse(body, res)
+		const [response, set] = mapResponse(body, createContext(), res)
 
 		expect(response).toBe(JSON.stringify(body))
 		expect(response).toEqual(res.body)
@@ -107,7 +113,7 @@ describe('Node - Map Compact Response', () => {
 			}
 		]
 
-		const [response, set] = mapCompactResponse(body, res)
+		const [response, set] = mapResponse(body, createContext(), res)
 
 		expect(response).toBe(JSON.stringify(body))
 		expect(response).toEqual(res.body)
@@ -124,7 +130,7 @@ describe('Node - Map Compact Response', () => {
 
 	it('map function', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(() => 1, res)
+		const [response, set] = mapResponse(() => 1, createContext(), res)
 
 		expect(response).toBe('1')
 		expect(response).toEqual(res.body)
@@ -141,7 +147,7 @@ describe('Node - Map Compact Response', () => {
 
 	it('map undefined', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(undefined, res)
+		const [response, set] = mapResponse(undefined, createContext(), res)
 
 		expect(response).toBe('')
 		expect(response).toEqual(res.body)
@@ -158,7 +164,7 @@ describe('Node - Map Compact Response', () => {
 
 	it('map null', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(null, res)
+		const [response, set] = mapResponse(null, createContext(), res)
 
 		expect(response).toBe('')
 		expect(response).toEqual(res.body)
@@ -177,7 +183,7 @@ describe('Node - Map Compact Response', () => {
 		const res = mockRes()
 		const image = file('./test/images/aris-yuzu.jpg')
 
-		const [response, set] = mapCompactResponse(image, res)
+		const [response, set] = mapResponse(image, createContext(), res)
 
 		expect(response).toBeInstanceOf(ElysiaFile)
 		// ? Unable to test because Node use buffer.pipe(res)
@@ -198,12 +204,18 @@ describe('Node - Map Compact Response', () => {
 		const res = mockRes()
 		const mockResponse = new Response('Shiroko')
 
-		const [response, set] = mapCompactResponse(mockResponse.clone(), res)
+		const [response, set] = mapResponse(
+			mockResponse.clone(),
+			createContext(),
+			res
+		)
 
 		// @ts-expect-error
 		expect(Buffer.from(await response).toString()).toBe(
 			await mockResponse.text()
 		)
+		// Unable to test because of an async operation
+		// expect(response).toEqual(res.body)
 
 		expect(set.status).toBe(200)
 		expect(set.status).toEqual(res.status)
@@ -218,7 +230,11 @@ describe('Node - Map Compact Response', () => {
 
 	it('map Error', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(new Error('Hello'), res)
+		const [response, set] = mapResponse(
+			new Error('Hello'),
+			createContext(),
+			res
+		)
 
 		expect(JSON.parse(response as string)).toEqual({
 			name: 'Error',
@@ -238,7 +254,7 @@ describe('Node - Map Compact Response', () => {
 
 	it('map function', () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse(() => 'a', res)
+		const [response, set] = mapResponse(() => 'a', createContext(), res)
 
 		expect(response).toEqual('a')
 		expect(response).toEqual(res.body)
@@ -255,10 +271,11 @@ describe('Node - Map Compact Response', () => {
 
 	it('map Promise', async () => {
 		const res = mockRes()
-		const [response, set] = await mapCompactResponse(
+		const [response, set] = await mapResponse(
 			new Promise((resolve) => {
 				resolve('a')
 			}),
+			createContext(),
 			res
 		)
 
@@ -309,7 +326,7 @@ describe('Node - Map Compact Response', () => {
 		form.append('name', 'Sancho')
 		form.append('alias', 'Don Quixote')
 
-		const [response, set] = mapCompactResponse(form, res)
+		const [response, set] = mapResponse(form, createContext(), res)
 
 		expect(response).toEqual(form)
 		expect(response).toEqual(res.body)
@@ -326,13 +343,12 @@ describe('Node - Map Compact Response', () => {
 		const res = mockRes()
 
 		const student = new Student('Rikuhachima Aru')
-		const [response, set] = await mapCompactResponse(student, res)
+		const [response, set] = await mapResponse(student, res)
 
 		// @ts-ignore
 		expect(Buffer.from(await response).toString()).toEqual(
 			await student.toResponse().text()
 		)
-		// expect(response).toEqual(res.body)
 
 		expect(set.status).toBe(200)
 		expect(set.status).toEqual(res.status)
@@ -350,7 +366,7 @@ describe('Node - Map Compact Response', () => {
 			alias: 'Don Quixote'
 		})
 
-		const [response, set] = mapCompactResponse(formData, res)
+		const [response, set] = mapResponse(formData, createContext(), res)
 
 		expect(response).toEqual(formData)
 		expect(response).toEqual(res.body)
@@ -366,8 +382,9 @@ describe('Node - Map Compact Response', () => {
 	it('map redirect', () => {
 		const res = mockRes()
 
-		const [response, set] = mapCompactResponse(
+		const [response, set] = mapResponse(
 			redirect('https://unwelcome.school/'),
+			createContext(),
 			res
 		)
 
@@ -380,10 +397,74 @@ describe('Node - Map Compact Response', () => {
 		expect(set.headers).toEqual(res.headers)
 	})
 
+	it('set response headers', () => {
+		const res = mockRes()
+
+		const [response, set] = mapResponse(
+			'Shiroko',
+			{
+				status: 200,
+				headers: {
+					alias: 'Abydos'
+				}
+			},
+			res
+		)
+
+		expect(set.headers).toEqual({
+			alias: 'Abydos',
+			'content-length': 7,
+			'content-type': 'text/plain;charset=utf8'
+		})
+		expect(res.headers).toEqual(set.headers)
+	})
+
+	it('map Response and merge Headers', async () => {
+		const res = mockRes()
+
+		const [response, set] = mapResponse(
+			new Response('Shiroko', {
+				headers: {
+					Name: 'Himari'
+				}
+			}),
+			{
+				headers: {
+					club: 'Paranormal Affairs Department'
+				}
+			},
+			res
+		)
+
+		expect(set.headers).toEqual({
+			name: 'Himari',
+			club: 'Paranormal Affairs Department',
+			'content-type': 'text/plain;charset=UTF-8'
+		})
+		expect(res.headers).toEqual(set.headers)
+	})
+
+	it('map named status', async () => {
+		const res = mockRes()
+
+		const [response, set] = mapResponse(
+			'Shiroko',
+			{
+				status: "I'm a teapot",
+				headers: {},
+				cookie: {}
+			},
+			res
+		)
+
+		expect(set.status).toBe(418)
+		expect(set.status).toEqual(res.status)
+	})
+
 	it('map file', async () => {
 		const res = mockRes()
 
-		const [response, set] = await mapCompactResponse(
+		const [response, set] = await mapResponse(
 			new File(
 				[await openAsBlob('./test/images/midori.png')],
 				'midori.png',
@@ -391,6 +472,7 @@ describe('Node - Map Compact Response', () => {
 					type: 'image/jpeg'
 				}
 			),
+			createContext(),
 			res
 		)
 

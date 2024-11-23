@@ -2,12 +2,25 @@
 import { createServer, type IncomingMessage } from 'http'
 import { Readable } from 'stream'
 
-import { isNotEmpty, isNumericString, mergeLifeCycle } from 'elysia/utils'
+import formidable from 'formidable'
+
+import { Elysia } from 'elysia'
+import type { Server } from 'elysia/universal'
+
+import {
+	isNotEmpty,
+	isNumericString,
+	mergeLifeCycle,
+	randomId
+} from 'elysia/utils'
 import { type ElysiaAdapter } from 'elysia/adapter'
+
 import { mapResponse, mapEarlyResponse, mapCompactResponse } from './handler'
 
 import { type WSLocalHook } from 'elysia/ws'
 import { attachWebSocket } from './ws'
+import { WebStandardAdapter } from 'elysia/adapter/web-standard'
+import { readFileToWebStandardFile, unwrapArrayIfSingle } from './utils'
 
 export const ElysiaNodeContext = Symbol('ElysiaNodeContext')
 
@@ -90,7 +103,10 @@ export const node = () => {
 			headers: `c.headers=c[ElysiaNodeContext].req.headers\n`,
 			inject: {
 				ElysiaNodeContext,
-				nodeRequestToWebstand
+				nodeRequestToWebstand,
+				formidable,
+				readFileToWebStandardFile,
+				unwrapArrayIfSingle
 			},
 			parser: {
 				declare: `const req=c[ElysiaNodeContext].req\n`,
@@ -143,10 +159,38 @@ export const node = () => {
 					return fnLiteral + `})` + '})\n'
 				},
 				arrayBuffer() {
-					return '\n'
+					let fnLiteral =
+						'c.body=await new Promise((re)=>{' +
+						`let body\n` +
+						`req.on('data',(chunk)=>{` +
+						`if(body) body=Buffer.concat([body,chunk])\n` +
+						`else body=chunk` +
+						`})\n` +
+						`req.on('end',()=>{`
+
+					fnLiteral +=
+						`if(!body || !body.length)return re()\n` +
+						`else re(` +
+						`body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)` +
+						`)`
+
+					return fnLiteral + `})` + '})\n'
 				},
 				formData() {
-					return '\n'
+					return (
+						'const fields=await formidable({}).parse(req)\n' +
+						// Fields
+						'c.body={}\n' +
+						'let fieldKeys=Object.keys(fields[0])\n' +
+						'for(let i=0;i<fieldKeys.length;i++){' +
+						'c.body[fieldKeys[i]]=unwrapArrayIfSingle(fields[0][fieldKeys[i]])' +
+						'}\n' +
+						// Files
+						'fieldKeys=Object.keys(fields[1])\n' +
+						'for(let i=0;i<fieldKeys.length;i++){' +
+						'c.body[fieldKeys[i]]=unwrapArrayIfSingle(await readFileToWebStandardFile(fields[1][fieldKeys[i]]))' +
+						'}\n'
+					)
 				}
 			}
 		},
@@ -262,7 +306,7 @@ export const node = () => {
 				`res.end(error.message)\n` +
 				`return [error.message, context.set]`,
 			unknownError:
-				`c.set.status = error.status\n` +
+				`context.set.status=error.status\n` +
 				`res.writeHead(context.set.status, context.set.headers)\n` +
 				`res.end(error.message)\n` +
 				`return [error.message, context.set]`
@@ -295,14 +339,109 @@ export const node = () => {
 					options = parseInt(options)
 				}
 
-				const server = createServer(
-					// @ts-ignore private property
-					app._handle
-				).listen(options, () => {
-					if (callback)
-						// @ts-ignore
-						callback()
+				const webStandardApp = new Elysia({
+					...app.options,
+					adapter: WebStandardAdapter
 				})
+					.use(app)
+					.compile()
+
+				app.fetch = webStandardApp.fetch
+
+				const { promise: serverInfo, resolve: setServerInfo } =
+					Promise.withResolvers<Server>()
+
+				// @ts-expect-error closest possible type
+				app.server = serverInfo
+
+				const server = createServer(
+					// @ts-expect-error private property
+					app._handle
+				).listen(
+					typeof options === 'number'
+						? options
+						: {
+								...options,
+								host: options?.hostname
+							},
+					() => {
+						const address = server.address()
+						const hostname =
+							typeof address === 'string'
+								? address
+								: address
+									? address.address
+									: 'localhost'
+						const port =
+							typeof address === 'string'
+								? 0
+								: (address?.port ?? 0)
+
+						const serverInfo: Server = {
+							id: randomId(),
+							development: process.env.NODE_ENV !== 'production',
+							fetch: app.fetch,
+							hostname,
+							// @ts-expect-error
+							get pendingRequests() {
+								const { promise, resolve, reject } =
+									Promise.withResolvers<number>()
+
+								server.getConnections((error, total) => {
+									if (error) reject(error)
+
+									resolve(total)
+								})
+
+								return promise
+							},
+							get pendingWebSockets() {
+								return 0
+							},
+							port,
+							publish() {
+								throw new Error(
+									"This adapter doesn't support uWebSocket Publish method"
+								)
+							},
+							ref() {
+								server.ref()
+							},
+							unref() {
+								server.unref()
+							},
+							reload() {
+								server.unref()
+								server.ref()
+							},
+							requestIP() {
+								throw new Error(
+									"This adapter doesn't support Bun requestIP method"
+								)
+							},
+							stop() {
+								server.close()
+							},
+							upgrade() {
+								throw new Error(
+									"This adapter doesn't support Web Standard Upgrade method"
+								)
+							},
+							url: new URL(
+								`http://${hostname === '::' ? 'localhost' : hostname}:${port}`
+							),
+							[Symbol.dispose]() {
+								server.close()
+							},
+							// @ts-expect-error additional property
+							raw: server
+						} satisfies Server
+
+						setServerInfo(serverInfo)
+
+						if (callback) callback(serverInfo)
+					}
+				)
 
 				if (
 					isNotEmpty(app.router.static.ws) ||

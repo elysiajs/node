@@ -34,6 +34,9 @@ export const mockRes = (): HttpResponse & {
 			body = _body
 		},
 		pipe(_: HttpResponse) {},
+		get statusCode() {
+			return status
+		},
 		set statusCode(_status: number) {
 			status = _status
 		},
