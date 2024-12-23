@@ -17,7 +17,6 @@ import { type ElysiaAdapter } from 'elysia/adapter'
 
 import { mapResponse, mapEarlyResponse, mapCompactResponse } from './handler'
 
-import { type WSLocalHook } from 'elysia/ws'
 import { attachWebSocket } from './ws'
 import { WebStandardAdapter } from 'elysia/adapter/web-standard'
 import { readFileToWebStandardFile, unwrapArrayIfSingle } from './utils'
@@ -33,19 +32,6 @@ const getUrl = (req: IncomingMessage) => {
 	return `http://localhost${req.url}`
 }
 
-export type EmptyWebsocket = WSLocalHook<
-	{},
-	{},
-	{
-		decorator: {}
-		store: {}
-		derive: {}
-		resolve: {}
-	},
-	{},
-	[]
->
-
 export const nodeRequestToWebstand = (
 	req: IncomingMessage,
 	abortController?: AbortController
@@ -56,9 +42,9 @@ export const nodeRequestToWebstand = (
 		method: req.method,
 		headers: req.headers as Record<string, string>,
 		get body() {
-			return req.method === 'GET' || req.method === 'HEAD'
-				? null
-				: (Readable.toWeb(req) as any)
+			if (req.method === 'GET' || req.method === 'HEAD') return null
+
+			return Readable.toWeb(req) as any
 		},
 		get signal() {
 			if (_signal) return _signal
@@ -71,7 +57,9 @@ export const nodeRequestToWebstand = (
 			})
 
 			return _signal
-		}
+		},
+		// @ts-expect-error
+		duplex: 'content-type' in req.headers ? 'half' : undefined
 	})
 }
 
@@ -81,12 +69,7 @@ export const node = () => {
 		handler: {
 			mapResponse,
 			mapEarlyResponse,
-			mapCompactResponse,
-			createStaticHandler: (value, _hook, defaultHeaders) =>
-				mapResponse(value, {
-					status: 200,
-					headers: defaultHeaders ?? {}
-				}) as any
+			mapCompactResponse
 		},
 		composeHandler: {
 			declare(inference) {
@@ -354,7 +337,7 @@ export const node = () => {
 				// @ts-expect-error closest possible type
 				app.server = serverInfo
 
-				const server = createServer(
+				let server = createServer(
 					// @ts-expect-error private property
 					app._handle
 				).listen(
@@ -411,8 +394,19 @@ export const node = () => {
 								server.unref()
 							},
 							reload() {
-								server.unref()
-								server.ref()
+								server.close()
+
+								server = createServer(
+									// @ts-expect-error private property
+									app._handle
+								).listen(
+									typeof options === 'number'
+										? options
+										: {
+												...options,
+												host: options?.hostname
+											}
+								)
 							},
 							requestIP() {
 								throw new Error(
@@ -440,6 +434,10 @@ export const node = () => {
 						setServerInfo(serverInfo)
 
 						if (callback) callback(serverInfo)
+
+						app.modules.then(() => {
+							serverInfo.reload(options)
+						})
 					}
 				)
 

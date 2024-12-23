@@ -12,11 +12,7 @@ import { getSchemaValidator, isNotEmpty, randomId } from 'elysia/utils'
 
 import { createServer, IncomingMessage, OutgoingMessage } from 'http'
 
-import {
-	nodeRequestToWebstand,
-	ElysiaNodeContext,
-	type EmptyWebsocket
-} from '.'
+import { nodeRequestToWebstand, ElysiaNodeContext } from '.'
 
 import WebSocket from 'ws'
 import type { WebSocket as NodeWebSocket, WebSocketServer } from 'ws'
@@ -27,6 +23,8 @@ import {
 } from 'elysia/ws'
 import type { ServerWebSocket } from 'elysia/ws/bun'
 import { parseSetCookies } from 'elysia/adapter/web-standard/handler'
+
+import type { AnyWSLocalHook } from 'elysia/ws/types'
 
 export const nodeWebSocketToServerWebSocket = (
 	ws: NodeWebSocket,
@@ -190,7 +188,7 @@ export const attachWebSocket = (
 			}
 
 			if (!route.websocket) return
-			const websocket: EmptyWebsocket = route.websocket
+			const websocket: AnyWSLocalHook = route.websocket
 
 			const validateMessage = getSchemaValidator(route.hooks.body, {
 				// @ts-expect-error private property
