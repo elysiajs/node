@@ -173,11 +173,11 @@ describe('Node - Map Compact Response', () => {
 		expect(set.headers).toEqual(res.headers)
 	})
 
-	it('map Blob', () => {
+	it('map Blob', async () => {
 		const res = mockRes()
 		const image = file('./test/images/aris-yuzu.jpg')
 
-		const [response, set] = mapCompactResponse(image, res)
+		const [response, set] = await mapCompactResponse(image, res)
 
 		expect(response).toBeInstanceOf(ElysiaFile)
 		// ? Unable to test because Node use buffer.pipe(res)
@@ -189,7 +189,7 @@ describe('Node - Map Compact Response', () => {
 		expect(set.headers).toEqual({
 			'content-type': 'image/jpeg',
 			'accept-range': 'bytes',
-			'content-range': `bytes 0-${image.length! - 1}/${image.length}`
+			'content-range': `bytes 0-${(await (image.length as number)!) - 1}/${await image.length}`
 		})
 		expect(set.headers).toEqual(res.headers)
 	})

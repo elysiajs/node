@@ -165,7 +165,11 @@ describe('Node - Map Response', () => {
 		const res = mockRes()
 		const image = file('./test/images/aris-yuzu.jpg')
 
-		const [response, set] = await mapEarlyResponse(image, createContext(), res)
+		const [response, set] = await mapEarlyResponse(
+			image,
+			createContext(),
+			res
+		)
 
 		expect(response).toBeInstanceOf(ElysiaFile)
 		// ? Unable to test because Node use buffer.pipe(res)
@@ -177,7 +181,7 @@ describe('Node - Map Response', () => {
 		expect(set.headers).toEqual({
 			'content-type': 'image/jpeg',
 			'accept-range': 'bytes',
-			'content-range': `bytes 0-${image.length! - 1}/${image.length}`
+			'content-range': `bytes 0-${(await (image.length as number)!) - 1}/${await image.length}`
 		})
 		expect(set.headers).toEqual(res.headers)
 	})
