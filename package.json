@@ -65,13 +65,13 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/elysiajs/elysia-node"
+		"url": "https://github.com/elysiajs/node"
 	},
 	"author": {
 		"name": "saltyAom",
 		"url": "https://github.com/SaltyAom",
 		"email": "saltyaom@gmail.com"
 	},
-	"homepage": "https://github.com/elysiajs/elysia-node",
-	"bugs": "https://github.com/elysiajs/elysia-node/issues"
+	"homepage": "https://github.com/elysiajs/node",
+	"bugs": "https://github.com/elysiajs/node/issues"
 }
