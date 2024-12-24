@@ -87,7 +87,7 @@ const handleFile = (
 	return [response, set] as ElysiaNodeResponse
 }
 
-const handleElysiaFile = (
+const handleElysiaFile = async (
 	response: ElysiaFile,
 	set?: SetResponse,
 	res?: HttpResponse
@@ -95,11 +95,14 @@ const handleElysiaFile = (
 	let headers
 	let status
 
+	const [length, value] = await Promise.all([response.length, response.value])
+
 	if (!set) {
 		headers = {
 			'accept-range': 'bytes',
-			'content-type': (response as ElysiaFile).type,
-			'content-range': `bytes 0-${(response as ElysiaFile).length - 1}/${(response as ElysiaFile).length}`
+			'content-type': response.type,
+			// BigInt is >= 9007 terabytes, likely not possible in a file
+			'content-range': `bytes 0-${(length as number) - 1}/${length}`
 		}
 
 		if (res) res.writeHead(200, headers)
@@ -108,8 +111,9 @@ const handleElysiaFile = (
 	} else {
 		Object.assign(set.headers, {
 			'accept-range': 'bytes',
-			'content-type': (response as ElysiaFile).type,
-			'content-range': `bytes 0-${(response as ElysiaFile).length - 1}/${(response as ElysiaFile).length}`
+			'content-type': response.type,
+			// BigInt is >= 9007 terabytes, likely not possible in a file
+			'content-range': `bytes 0-${(length as number) - 1}/${length}`
 		})
 
 		if (res) res.writeHead(set.status, set.headers)
@@ -119,7 +123,7 @@ const handleElysiaFile = (
 	}
 
 	if (res) {
-		;((response as ElysiaFile).value as ReadStream).pipe(res)
+		;(value as ReadStream).pipe(res)
 	}
 
 	return [
@@ -281,7 +285,11 @@ export const mapResponse = (
 			return [response, set as any]
 
 		case 'ElysiaFile':
-			return handleElysiaFile(response as ElysiaFile, set as any, res)
+			return handleElysiaFile(
+				response as ElysiaFile,
+				set as any,
+				res
+			) as any
 
 		case 'File':
 		case 'Blob':
@@ -438,7 +446,11 @@ export const mapResponse = (
 			}
 
 			if (response instanceof ElysiaFile)
-				return handleElysiaFile(response as ElysiaFile, set as any, res)
+				return handleElysiaFile(
+					response as ElysiaFile,
+					set as any,
+					res
+				) as any
 
 			// @ts-expect-error
 			if (typeof response?.next === 'function')
@@ -529,7 +541,11 @@ export const mapEarlyResponse = (
 			return [response, set as any]
 
 		case 'ElysiaFile':
-			return handleElysiaFile(response as ElysiaFile, set as any, res)
+			return handleElysiaFile(
+				response as ElysiaFile,
+				set as any,
+				res
+			) as any
 
 		case 'File':
 		case 'Blob':

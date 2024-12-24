@@ -1,77 +1,77 @@
 {
-    "name": "@elysiajs/node",
-    "version": "1.2.0",
-    "description": "Plugin for Elysia for retreiving Bearer token",
-    "license": "MIT",
-    "scripts": {
-        "dev": "tsx --watch ./example/index.ts",
-        "test": "vitest run",
-        "test:node": "npm install --prefix ./test/node/cjs/ && npm install --prefix ./test/node/esm/ && node ./test/node/cjs/index.js && node ./test/node/esm/index.js",
-        "build": "bun build.ts",
-        "release": "npm run build && npm run test && npm publish --access public"
-    },
-    "dependencies": {
-        "formidable": "^3.5.2",
-        "ws": "^8.18.0"
-    },
-    "peerDependencies": {
-        "elysia": ">= 1.2.0-rc.0",
-        "bufferutil": ">= 4.0.1",
-        "formidable": ">= 3.5.2",
-        "ws": ">= 8.18.0"
-    },
-    "peerDependenciesMeta": {
+	"name": "@elysiajs/node",
+	"version": "1.2.1",
+	"description": "Plugin for Elysia for retreiving Bearer token",
+	"license": "MIT",
+	"scripts": {
+		"dev": "tsx --watch ./example/index.ts",
+		"test": "vitest run",
+		"test:node": "npm install --prefix ./test/node/cjs/ && npm install --prefix ./test/node/esm/ && node ./test/node/cjs/index.js && node ./test/node/esm/index.js",
+		"build": "bun build.ts",
+		"release": "npm run build && npm run test && npm publish --access public"
+	},
+	"dependencies": {
+		"formidable": "^3.5.2",
+		"ws": "^8.18.0"
+	},
+	"peerDependencies": {
+		"elysia": ">= 1.2.3",
+		"bufferutil": ">= 4.0.1",
+		"formidable": ">= 3.5.2",
+		"ws": ">= 8.18.0"
+	},
+	"peerDependenciesMeta": {
 		"bufferutil": {
 			"optional": true
 		}
 	},
-    "devDependencies": {
-        "@types/formidable": "^3.4.5",
-        "@types/node": "^22.10.2",
-        "@types/ws": "^8.5.13",
-        "elysia": ">= 1.2.0-exp.48",
-        "eslint": "9.17.0",
-        "light-my-request": "^6.4.0",
-        "tsup": "^8.3.5",
-        "tsx": "^4.19.2",
-        "typescript": "^5.7.2",
-        "vitest": "^2.1.8"
-    },
-    "main": "./dist/cjs/index.js",
-    "module": "./dist/index.mjs",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/cjs/index.js"
-        },
-        "./handler": {
-            "types": "./dist/handler.d.ts",
-            "import": "./dist/handler.mjs",
-            "require": "./dist/cjs/handler.js"
-        },
-        "./ws": {
-            "types": "./dist/ws.d.ts",
-            "import": "./dist/ws.mjs",
-            "require": "./dist/cjs/ws.js"
-        }
-    },
-    "keywords": [
-        "elysia",
-        "bearer",
-        "authentication"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/elysiajs/elysia-bearer"
-    },
-    "author": {
-        "name": "saltyAom",
-        "url": "https://github.com/SaltyAom",
-        "email": "saltyaom@gmail.com"
-    },
-    "homepage": "https://github.com/elysiajs/elysia-bearer",
-    "bugs": "https://github.com/elysiajs/elysia-bearer/issues"
+	"devDependencies": {
+		"@types/formidable": "^3.4.5",
+		"@types/node": "^22.10.2",
+		"@types/ws": "^8.5.13",
+		"elysia": "1.2.3",
+		"eslint": "9.17.0",
+		"light-my-request": "^6.4.0",
+		"tsup": "^8.3.5",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.2",
+		"vitest": "^2.1.8"
+	},
+	"main": "./dist/cjs/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		"./package.json": "./package.json",
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.mjs",
+			"require": "./dist/cjs/index.js"
+		},
+		"./handler": {
+			"types": "./dist/handler.d.ts",
+			"import": "./dist/handler.mjs",
+			"require": "./dist/cjs/handler.js"
+		},
+		"./ws": {
+			"types": "./dist/ws.d.ts",
+			"import": "./dist/ws.mjs",
+			"require": "./dist/cjs/ws.js"
+		}
+	},
+	"keywords": [
+		"elysia",
+		"bearer",
+		"authentication"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/elysiajs/elysia-bearer"
+	},
+	"author": {
+		"name": "saltyAom",
+		"url": "https://github.com/SaltyAom",
+		"email": "saltyaom@gmail.com"
+	},
+	"homepage": "https://github.com/elysiajs/elysia-bearer",
+	"bugs": "https://github.com/elysiajs/elysia-bearer/issues"
 }

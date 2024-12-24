@@ -195,7 +195,7 @@ export const node = () => {
 
 				// @ts-ignore
 				for (const key of Object.keys(app.singleton.decorator))
-					decoratorsLiteral += `,${key}: app.singleton.decorator.${key}`
+					decoratorsLiteral += `,${key}: decorator['${key}']`
 
 				const hasTrace = app.event.trace.length > 0
 
