@@ -345,6 +345,7 @@ export const node = () => {
 						? options
 						: {
 								...options,
+								// @ts-expect-error
 								host: options?.hostname
 							},
 					() => {
@@ -404,6 +405,7 @@ export const node = () => {
 										? options
 										: {
 												...options,
+												// @ts-expect-error
 												host: options?.hostname
 											}
 								)
@@ -436,7 +438,11 @@ export const node = () => {
 						if (callback) callback(serverInfo)
 
 						app.modules.then(() => {
-							serverInfo.reload(options)
+							if (typeof options === 'object')
+								try {
+									// @ts-expect-error
+									serverInfo.reload(options)
+								} catch {}
 						})
 					}
 				)

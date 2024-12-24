@@ -161,11 +161,11 @@ describe('Node - Map Response', () => {
 		).toBeUndefined()
 	})
 
-	it('map Blob', () => {
+	it('map Blob', async () => {
 		const res = mockRes()
 		const image = file('./test/images/aris-yuzu.jpg')
 
-		const [response, set] = mapEarlyResponse(image, createContext(), res)
+		const [response, set] = await mapEarlyResponse(image, createContext(), res)
 
 		expect(response).toBeInstanceOf(ElysiaFile)
 		// ? Unable to test because Node use buffer.pipe(res)

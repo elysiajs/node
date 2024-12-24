@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mockRes } from '../utils'
 
-import { form, file, redirect } from 'elysia'
+import { form, file, redirect, type Context } from 'elysia'
 
 import { ElysiaFile } from 'elysia/universal/file'
 import { mapCompactResponse, mapResponse } from '../../src/handler'
@@ -181,7 +181,7 @@ describe('Node - Map Response', () => {
 
 	it('map Blob', () => {
 		const res = mockRes()
-		const image = file('./test/images/aris-yuzu.jpg')
+		const image = await file('./test/images/aris-yuzu.jpg')
 
 		const [response, set] = mapResponse(image, createContext(), res)
 

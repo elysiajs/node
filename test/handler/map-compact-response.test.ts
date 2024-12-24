@@ -27,9 +27,9 @@ class Student {
 class CustomResponse extends Response {}
 
 describe('Node - Map Compact Response', () => {
-	it('map string', () => {
+	it('map string', async () => {
 		const res = mockRes()
-		const [response, set] = mapCompactResponse('Shiroko', res)
+		const [response, set] = await mapCompactResponse('Shiroko', res)
 
 		expect(response).toBe('Shiroko')
 		expect(response).toEqual(res.body)
