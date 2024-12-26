@@ -263,7 +263,10 @@ export const mapResponse = (
 			set.headers['content-type'] = 'text/plain;charset=utf8'
 
 			if (res) {
-				set.headers['content-length'] = (response as string).length
+				set.headers['content-length'] = Buffer.byteLength(
+					response as string,
+					'utf8'
+				)
 				res.writeHead(set.status!, set.headers)
 				res.end(response)
 			}
@@ -275,7 +278,10 @@ export const mapResponse = (
 			response = JSON.stringify(response)
 
 			set.headers['content-type'] = 'application/json;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -349,7 +355,10 @@ export const mapResponse = (
 			response = JSON.stringify(response)
 
 			set.headers['content-type'] = 'application/json;charset=utf8'
-			set.headers['content-length'] = (response as string)?.length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -392,7 +401,10 @@ export const mapResponse = (
 			response = (response as number | boolean).toString()
 
 			set.headers['content-type'] = 'text/plain;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -474,7 +486,10 @@ export const mapResponse = (
 							'application/json;charset=utf8'
 
 					response = JSON.stringify(response)
-					set.headers['content-length'] = (response as string).length
+					set.headers['content-length'] = Buffer.byteLength(
+						response as string,
+						'utf8'
+					)
 
 					if (res) {
 						res.writeHead(set.status!, set.headers)
@@ -486,7 +501,10 @@ export const mapResponse = (
 			}
 
 			set.headers['content-type'] = 'text/plain;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -517,7 +535,10 @@ export const mapEarlyResponse = (
 	switch (response?.constructor?.name) {
 		case 'String':
 			set.headers['content-type'] = 'text/plain;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -531,7 +552,10 @@ export const mapEarlyResponse = (
 			response = JSON.stringify(response)
 
 			set.headers['content-type'] = 'application/json;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -599,7 +623,10 @@ export const mapEarlyResponse = (
 			response = JSON.stringify(response)
 
 			set.headers['content-type'] = 'application/json;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			return [response, set as any]
 
@@ -637,7 +664,10 @@ export const mapEarlyResponse = (
 			response = (response as number | boolean).toString()
 
 			set.headers['content-type'] = 'text/plain;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
@@ -716,7 +746,10 @@ export const mapEarlyResponse = (
 					if (!set.headers['Content-Type'])
 						set.headers['content-type'] =
 							'application/json;charset=utf8'
-					set.headers['content-length'] = (response as string).length
+					set.headers['content-length'] = Buffer.byteLength(
+						response as string,
+						'utf8'
+					)
 
 					if (res) {
 						res.writeHead(set.status!, set.headers)
@@ -728,7 +761,10 @@ export const mapEarlyResponse = (
 			}
 
 			set.headers['content-type'] = 'text/plain;charset=utf8'
-			set.headers['content-length'] = (response as string).length
+			set.headers['content-length'] = Buffer.byteLength(
+				response as string,
+				'utf8'
+			)
 
 			if (res) {
 				res.writeHead(set.status!, set.headers)
