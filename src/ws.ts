@@ -192,6 +192,8 @@ export const attachWebSocket = (
 
 			const validateMessage = getSchemaValidator(route.hooks.body, {
 				// @ts-expect-error private property
+				modules: app.definitions.typebox,
+				// @ts-expect-error private property
 				models: app.definitions.type as Record<string, TSchema>,
 				normalize: app.config.normalize
 			})
@@ -199,6 +201,8 @@ export const attachWebSocket = (
 			const validateResponse = getSchemaValidator(
 				route.hooks.response as any,
 				{
+					// @ts-expect-error private property
+					modules: app.definitions.typebox,
 					// @ts-expect-error private property
 					models: app.definitions.type as Record<string, TSchema>,
 					normalize: app.config.normalize

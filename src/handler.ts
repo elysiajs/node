@@ -701,7 +701,7 @@ export const mapEarlyResponse = (
 				)
 
 				return [
-					responseToValue(response, res, set as SetResponse),
+					responseToValue(response as Response, res, set as SetResponse),
 					set as any
 				]
 			}
