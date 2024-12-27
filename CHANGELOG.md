@@ -1,3 +1,7 @@
+# 1.2.3 - 27 Dec 2024
+Bug fix:
+- async module doesn't load (eg. @elysiajs/swagger)
+
 # 1.2.2 - 27 Dec 2024
 Bug fix:
 - Set minimum Elysia version to 1.2.7

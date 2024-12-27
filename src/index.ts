@@ -19,7 +19,11 @@ import { mapResponse, mapEarlyResponse, mapCompactResponse } from './handler'
 
 import { attachWebSocket } from './ws'
 import { WebStandardAdapter } from 'elysia/adapter/web-standard'
-import { readFileToWebStandardFile, unwrapArrayIfSingle, withResolvers } from './utils'
+import {
+	readFileToWebStandardFile,
+	unwrapArrayIfSingle,
+	withResolvers
+} from './utils'
 
 export const ElysiaNodeContext = Symbol('ElysiaNodeContext')
 
@@ -438,11 +442,16 @@ export const node = () => {
 						if (callback) callback(serverInfo)
 
 						app.modules.then(() => {
-							if (typeof options === 'object')
-								try {
-									// @ts-ignore
-									serverInfo.reload(options)
-								} catch {}
+							try {
+								serverInfo.reload(
+									// @ts-expect-error
+									typeof options === 'object'
+										? options
+										: {
+												port: options
+											}
+								)
+							} catch {}
 						})
 					}
 				)

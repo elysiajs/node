@@ -1,6 +1,6 @@
 {
 	"name": "@elysiajs/node",
-	"version": "1.2.2",
+	"version": "1.2.3",
 	"description": "Plugin for Elysia for retreiving Bearer token",
 	"license": "MIT",
 	"scripts": {
@@ -27,6 +27,7 @@
 	},
 	"devDependencies": {
 		"@elysiajs/cors": "^1.2.0",
+		"@elysiajs/swagger": "^1.2.0",
 		"@types/formidable": "^3.4.5",
 		"@types/node": "^22.10.2",
 		"@types/ws": "^8.5.13",
