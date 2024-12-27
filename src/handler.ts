@@ -359,7 +359,7 @@ export const mapResponse = (
 			return [response, set as any]
 
 		case 'Response':
-			mergeResponseWithSetHeaders(response as Response, set)
+			response = mergeResponseWithSetHeaders(response as Response, set)
 
 			if (
 				(response as Response).headers.get('transfer-encoding') ===
@@ -417,7 +417,10 @@ export const mapResponse = (
 
 		default:
 			if (response instanceof Response) {
-				mergeResponseWithSetHeaders(response as Response, set)
+				response = mergeResponseWithSetHeaders(
+					response as Response,
+					set
+				)
 
 				return [
 					responseToValue(
@@ -604,7 +607,7 @@ export const mapEarlyResponse = (
 			return [response, set as any]
 
 		case 'Response':
-			mergeResponseWithSetHeaders(response as Response, set)
+			response = mergeResponseWithSetHeaders(response as Response, set)
 
 			if (
 				(response as Response).headers.get('transfer-encoding') ===
@@ -662,7 +665,10 @@ export const mapEarlyResponse = (
 
 		default:
 			if (response instanceof Response) {
-				mergeResponseWithSetHeaders(response as Response, set)
+				response = mergeResponseWithSetHeaders(
+					response as Response,
+					set
+				)
 
 				return [
 					responseToValue(response, res, set as SetResponse),

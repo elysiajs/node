@@ -19,7 +19,7 @@ import { mapResponse, mapEarlyResponse, mapCompactResponse } from './handler'
 
 import { attachWebSocket } from './ws'
 import { WebStandardAdapter } from 'elysia/adapter/web-standard'
-import { readFileToWebStandardFile, unwrapArrayIfSingle } from './utils'
+import { readFileToWebStandardFile, unwrapArrayIfSingle, withResolvers } from './utils'
 
 export const ElysiaNodeContext = Symbol('ElysiaNodeContext')
 
@@ -332,7 +332,7 @@ export const node = () => {
 				app.fetch = webStandardApp.fetch
 
 				const { promise: serverInfo, resolve: setServerInfo } =
-					Promise.withResolvers<Server>()
+					withResolvers<Server>()
 
 				// @ts-expect-error closest possible type
 				app.server = serverInfo
@@ -369,7 +369,7 @@ export const node = () => {
 							// @ts-expect-error
 							get pendingRequests() {
 								const { promise, resolve, reject } =
-									Promise.withResolvers<number>()
+									withResolvers<number>()
 
 								server.getConnections((error, total) => {
 									if (error) reject(error)
