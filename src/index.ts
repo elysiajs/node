@@ -444,9 +444,8 @@ export const node = () => {
 						app.modules.then(() => {
 							try {
 								serverInfo.reload(
-									// @ts-expect-error
 									typeof options === 'object'
-										? options
+										? options as any
 										: {
 												port: options
 											}
