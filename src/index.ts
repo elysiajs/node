@@ -63,8 +63,7 @@ export const nodeRequestToWebstand = (
 			return _signal
 		},
 		// @ts-expect-error
-		// ? https://github.com/nodejs/node/issues/46221#issuecomment-1426707013
-		duplex: 'content-length' in req.headers ? true : undefined
+		duplex: 'half'
 	})
 }
 
@@ -349,10 +348,10 @@ export const node = () => {
 					typeof options === 'number'
 						? options
 						: {
-								...options,
-								// @ts-ignore
-								host: options?.hostname
-							},
+							...options,
+							// @ts-ignore
+							host: options?.hostname
+						},
 					() => {
 						const address = server.address()
 						const hostname =
@@ -409,10 +408,10 @@ export const node = () => {
 									typeof options === 'number'
 										? options
 										: {
-												...options,
-												// @ts-ignore
-												host: options?.hostname
-											}
+											...options,
+											// @ts-ignore
+											host: options?.hostname
+										}
 								)
 							},
 							requestIP() {
@@ -448,10 +447,10 @@ export const node = () => {
 									typeof options === 'object'
 										? (options as any)
 										: {
-												port: options
-											}
+											port: options
+										}
 								)
-							} catch {}
+							} catch { }
 						})
 					}
 				)
