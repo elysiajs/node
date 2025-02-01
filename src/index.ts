@@ -80,7 +80,7 @@ export const node = () => {
 		},
 		composeHandler: {
 			declare(inference) {
-				if (inference.request || inference.request)
+				if (inference.request || inference.cookie)
 					return (
 						`if(!('request' in c)){` +
 						`let _request\n` +
@@ -215,12 +215,12 @@ export const node = () => {
 				fnLiteral += `let _request\n` + `const c={`
 
 				// @ts-ignore protected
-				// if (app.inference.request || app.inference.cookie)
-				// 	fnLiteral +=
-				// 		`get request(){` +
-				// 		`if(_request)return _request\n` +
-				// 		`return _request = nodeRequestToWebstand(r)` +
-				// 		`},`
+				if (app.inference.request || app.inference.cookie)
+					fnLiteral +=
+						`get request(){` +
+						`if(_request)return _request\n` +
+						`return _request = nodeRequestToWebstand(r)` +
+						`},`
 
 				fnLiteral +=
 					`store,` +

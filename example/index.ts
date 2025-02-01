@@ -3,21 +3,13 @@ import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
 import { node } from '../src'
 
-const plugin = async () => new Elysia().get('/async', () => 'ok')
-
-const app = new Elysia({
-	adapter: node()
-})
-	.use(cors())
-	.use(swagger())
-	.get('/image', () => file('test/kyuukurarin.mp4'))
-	.post('/', ({ body }) => body, {
-		type: 'json'
-	})
+const app = new Elysia({ adapter: node() })
+	.use((app) =>
+		app
+			.derive({ as: 'global' }, async ({ cookie }) => {})
+			.onAfterHandle({ as: 'global' }, async ({ response }) => {
+				return response
+			})
+	)
 	.get('/', () => 'ok')
-	.ws('/ws', {
-		message(ws, message) {
-			ws.send(message)
-		}
-	})
 	.listen(3000)
