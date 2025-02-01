@@ -1,17 +1,27 @@
 import { Elysia } from 'elysia'
 import { node } from '../src'
+import cors from '@elysiajs/cors'
 
-new Elysia({ adapter: node() })
-	.ws('/', {
-		upgrade({ set }) {
-			set.headers['a'] = 'b'
-		},
-		open(ws) {
-			ws.subscribe('topic')
-			ws.publish('topic', 'Hello')
-		},
-		message(ws, message) {
-			ws.publish('topic', message)
-		}
+const app = new Elysia({
+	adapter: node()
+})
+	.use(
+		cors({
+			origin: true,
+			credentials: true,
+			preflight: true
+		})
+	)
+	.post('/', ({ body }) => body)
+	.listen(8000, ({ port }) => {
+		console.log(`Server is running on http://localhost:${port}`)
+
+		fetch('http://localhost:8000', {
+			headers: {
+				authorization: `Bearer 12345`
+			}
+		})
 	})
-	.listen(3000)
+
+// console.log(app._handle.toString())
+// console.log(app.routes[0].compile().toString())
