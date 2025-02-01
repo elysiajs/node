@@ -1,18 +1,43 @@
 import { Elysia, t } from 'elysia'
-import { node } from '../src'
-import cors from '@elysiajs/cors'
+import { ElysiaNodeContext, node } from '../src'
 
-const app = new Elysia({ adapter: node() })
-	.use((app) =>
-		app
-			.derive({ as: 'global' }, async ({ cookie }) => {})
-			.onAfterHandle({ as: 'global' }, async ({ response }) => {
-				console.log('onAfterHandle', response)
-				// await commitSession();
-				return response
+const app = new Elysia({
+	adapter: node()
+})
+	.onError(({ request }) => {
+		return
+	})
+	.post(
+		'/',
+		({ body }) => {
+			console.log({ body })
+
+			return 'OK'
+		},
+		{
+			body: t.Object({
+				test: t.String()
 			})
+		}
 	)
-	.get('/', () => 'Hello World')
 	.listen(3000)
 
-console.log(app._handle)
+// console.log(app._handle.toString())
+// console.log(app.routes[0].compile().toString())
+// console.log(app.handleError.toString())
+
+const main = async () => {
+	const res = await fetch('http://localhost:3000/', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ bad: '' })
+	})
+
+	console.log('status', res.status)
+
+	// app.stop(true)
+}
+
+main()

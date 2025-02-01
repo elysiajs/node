@@ -1,3 +1,7 @@
+# 1.2.5 - 1 Feb 2025
+Bug fix:
+- [#23](https://github.com/elysiajs/node/issues/23) Response body object should not be disturbed or locked
+
 # 1.2.4 - 1 Feb 2025
 Change:
 - Support Elysia 1.2.11

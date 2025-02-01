@@ -41,14 +41,17 @@ export const nodeRequestToWebstand = (
 	abortController?: AbortController
 ) => {
 	let _signal: AbortSignal
+	let _body: unknown
 
 	return new Request(getUrl(req), {
 		method: req.method,
 		headers: req.headers as Record<string, string>,
 		get body() {
 			if (req.method === 'GET' || req.method === 'HEAD') return null
+			if (_body !== undefined) return _body
+			if (req.readable) return (_body = Readable.toWeb(req) as any)
 
-			return Readable.toWeb(req) as any
+			return null
 		},
 		get signal() {
 			if (_signal) return _signal
@@ -76,16 +79,20 @@ export const node = () => {
 			mapCompactResponse
 		},
 		composeHandler: {
-			// declare(inference) {
-			// 	if (inference.request)
-			// 		return (
-			// 			`Object.defineProperty(c,'request',{` +
-			// 			`get(){` +
-			// 			`return nodeRequestToWebstand(c[ElysiaNodeContext].req)` +
-			// 			`}` +
-			// 			`})\n`
-			// 		)
-			// },
+			declare(inference) {
+				if (inference.request || inference.request)
+					return (
+						`if(!('request' in c)){` +
+						`let _request\n` +
+						`Object.defineProperty(c,'request',{` +
+						`get(){` +
+						`if(_request)return _request\n` +
+						`return _request=nodeRequestToWebstand(c[ElysiaNodeContext].req)` +
+						`}` +
+						`})` +
+						'}\n'
+					)
+			},
 			mapResponseContext: 'c[ElysiaNodeContext].res',
 			headers: `c.headers=c[ElysiaNodeContext].req.headers\n`,
 			inject: {
@@ -208,12 +215,12 @@ export const node = () => {
 				fnLiteral += `let _request\n` + `const c={`
 
 				// @ts-ignore protected
-				if (app.inference.request || app.inference.cookie)
-					fnLiteral +=
-						`get request(){` +
-						`if(_request)return _request\n` +
-						`return _request = nodeRequestToWebstand(r)` +
-						`},`
+				// if (app.inference.request || app.inference.cookie)
+				// 	fnLiteral +=
+				// 		`get request(){` +
+				// 		`if(_request)return _request\n` +
+				// 		`return _request = nodeRequestToWebstand(r)` +
+				// 		`},`
 
 				fnLiteral +=
 					`store,` +
@@ -348,10 +355,10 @@ export const node = () => {
 					typeof options === 'number'
 						? options
 						: {
-							...options,
-							// @ts-ignore
-							host: options?.hostname
-						},
+								...options,
+								// @ts-ignore
+								host: options?.hostname
+							},
 					() => {
 						const address = server.address()
 						const hostname =
@@ -408,10 +415,10 @@ export const node = () => {
 									typeof options === 'number'
 										? options
 										: {
-											...options,
-											// @ts-ignore
-											host: options?.hostname
-										}
+												...options,
+												// @ts-ignore
+												host: options?.hostname
+											}
 								)
 							},
 							requestIP() {
@@ -447,10 +454,10 @@ export const node = () => {
 									typeof options === 'object'
 										? (options as any)
 										: {
-											port: options
-										}
+												port: options
+											}
 								)
-							} catch { }
+							} catch {}
 						})
 					}
 				)
