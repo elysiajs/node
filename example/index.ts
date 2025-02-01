@@ -15,4 +15,9 @@ const app = new Elysia({
 		type: 'json'
 	})
 	.get('/', () => 'ok')
+	.ws('/ws', {
+		message(ws, message) {
+			ws.send(message)
+		}
+	})
 	.listen(3000)

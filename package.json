@@ -1,6 +1,6 @@
 {
 	"name": "@elysiajs/node",
-	"version": "1.2.5",
+	"version": "1.2.4",
 	"description": "Plugin for Elysia for retreiving Bearer token",
 	"license": "MIT",
 	"scripts": {

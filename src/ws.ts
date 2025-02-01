@@ -14,8 +14,8 @@ import { createServer, IncomingMessage, OutgoingMessage } from 'http'
 
 import { nodeRequestToWebstand, ElysiaNodeContext } from '.'
 
-import WebSocket from 'ws'
-import type { WebSocket as NodeWebSocket, WebSocketServer } from 'ws'
+import { WebSocketServer } from 'ws'
+import type { WebSocket as NodeWebSocket } from 'ws'
 import {
 	createHandleWSResponse,
 	createWSMessageParser,
@@ -135,6 +135,8 @@ export const requestToContext = (
 		)
 	}
 
+	let _request: Request | undefined
+
 	return Object.assign(
 		{},
 		// @ts-expect-error private property
@@ -148,7 +150,8 @@ export const requestToContext = (
 			set,
 			redirect,
 			get request() {
-				return nodeRequestToWebstand(request)
+				if (_request) return _request
+				return (_request = nodeRequestToWebstand(request))
 			},
 			[ElysiaNodeContext]: {
 				req: request,
@@ -163,7 +166,7 @@ export const attachWebSocket = (
 	app: AnyElysia,
 	server: ReturnType<typeof createServer>
 ) => {
-	const wsServer = new WebSocket.Server({
+	const wsServer = new WebSocketServer({
 		noServer: true
 	})
 
