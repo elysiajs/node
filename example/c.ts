@@ -1,21 +1,26 @@
 import { Elysia } from 'elysia'
 import { node } from '../src'
-
-const plugin = new Elysia({ prefix: '/api/v1' }).post(
-	'/',
-	async ({ body, store, error, request }) => {
-		return {
-			message: 'Hello World'
-		}
-	}
-)
+import cors from '@elysiajs/cors'
 
 const app = new Elysia({
 	adapter: node()
 })
-	.use(plugin)
+	.use(
+		cors({
+			origin: true,
+			credentials: true,
+			preflight: true
+		})
+	)
+	.post('/', ({ body }) => body)
 	.listen(8000, ({ port }) => {
 		console.log(`Server is running on http://localhost:${port}`)
+
+		fetch('http://localhost:8000', {
+			headers: {
+				authorization: `Bearer 12345`
+			}
+		})
 	})
 
 // console.log(app._handle.toString())

@@ -63,7 +63,8 @@ export const nodeRequestToWebstand = (
 			return _signal
 		},
 		// @ts-expect-error
-		duplex: 'content-type' in req.headers ? 'half' : undefined
+		// ? https://github.com/nodejs/node/issues/46221#issuecomment-1426707013
+		duplex: 'content-length' in req.headers ? true : undefined
 	})
 }
 

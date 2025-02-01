@@ -1,6 +1,7 @@
 # 1.2.4 - 9 Jan 2024
 Bug fix:
 - Support Elysia 1.2.11
+- [#15](https://github.com/elysiajs/node/issues/15) Possibly fix `ReadableStream` duplex issue?
 - [#14](https://github.com/elysiajs/node/issues/14) ReadableStream has already been used if request is reference multiple time
 
 # 1.2.3 - 27 Dec 2024
