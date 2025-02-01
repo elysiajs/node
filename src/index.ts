@@ -76,16 +76,16 @@ export const node = () => {
 			mapCompactResponse
 		},
 		composeHandler: {
-			declare(inference) {
-				if (inference.request)
-					return (
-						`Object.defineProperty(c,'request',{` +
-						`get(){` +
-						`return nodeRequestToWebstand(c[ElysiaNodeContext].req)` +
-						`}` +
-						`})\n`
-					)
-			},
+			// declare(inference) {
+			// 	if (inference.request)
+			// 		return (
+			// 			`Object.defineProperty(c,'request',{` +
+			// 			`get(){` +
+			// 			`return nodeRequestToWebstand(c[ElysiaNodeContext].req)` +
+			// 			`}` +
+			// 			`})\n`
+			// 		)
+			// },
 			mapResponseContext: 'c[ElysiaNodeContext].res',
 			headers: `c.headers=c[ElysiaNodeContext].req.headers\n`,
 			inject: {
@@ -201,7 +201,7 @@ export const node = () => {
 				for (const key of Object.keys(app.singleton.decorator))
 					decoratorsLiteral += `,${key}: decorator['${key}']`
 
-				const hasTrace = app.event.trace.length > 0
+				const hasTrace = !!app.event.trace?.length
 
 				if (hasTrace) fnLiteral += `const id=randomId()\n`
 
@@ -313,7 +313,7 @@ export const node = () => {
 				hooks: lifecycle,
 				websocket: options
 			})
-			app.router.ws.history.push(['$INTERNALWS', path, options])
+			app.router.http.history.push(['$INTERNALWS', path, options])
 		},
 		listen(app) {
 			return (options, callback) => {
@@ -445,7 +445,7 @@ export const node = () => {
 							try {
 								serverInfo.reload(
 									typeof options === 'object'
-										? options as any
+										? (options as any)
 										: {
 												port: options
 											}
@@ -455,20 +455,25 @@ export const node = () => {
 					}
 				)
 
+				// @ts-ignore
+				app.router.http.build?.()
+
 				if (
 					isNotEmpty(app.router.static.ws) ||
-					app.router.ws.history.length
+					app.router.http.history.find((x) => x[0] === 'ws')
 				)
 					attachWebSocket(app, server)
 
-				for (let i = 0; i < app.event.start.length; i++)
-					app.event.start[i].fn(this)
+				if (app.event.start)
+					for (let i = 0; i < app.event.start.length; i++)
+						app.event.start[i].fn(this)
 
 				process.on('beforeExit', () => {
 					server.close()
 
-					for (let i = 0; i < app.event.stop.length; i++)
-						app.event.stop[i].fn(this)
+					if (app.event.stop)
+						for (let i = 0; i < app.event.stop.length; i++)
+							app.event.stop[i].fn(this)
 				})
 			}
 		}

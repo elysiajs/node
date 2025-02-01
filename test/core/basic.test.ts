@@ -53,4 +53,49 @@ describe('Node - Core', () => {
 			}
 		)
 	})
+
+	it('handle plugin', () => {
+		const plugin = new Elysia({ prefix: '/api/v1' }).post(
+			'/',
+			async ({ request }) => {
+				return {
+					message: 'Yugiri'
+				}
+			},
+			{
+				beforeHandle({ request }) {
+					request
+				}
+			}
+		)
+
+		const app = new Elysia({
+			adapter: node()
+		})
+			.use(plugin)
+			.listen(8000, ({ port }) => {
+				console.log(`Server is running on http://localhost:${port}`)
+			})
+
+		inject(
+			// @ts-ignore
+			app._handle,
+			{
+				path: '/api/v1',
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ message: 'Hello Yugiri' })
+			},
+			(error, res) => {
+				expect(error).toBeNull()
+
+				expect(res?.body).toBe(JSON.stringify({ message: 'Yugiri' }))
+				expect(res?.headers['content-type']).toBe(
+					'application/json;charset=utf8'
+				)
+			}
+		)
+	})
 })

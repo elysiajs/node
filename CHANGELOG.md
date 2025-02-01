@@ -1,3 +1,8 @@
+# 1.2.4 - 9 Jan 2024
+Bug fix:
+- Support Elysia 1.2.11
+- [#14](https://github.com/elysiajs/node/issues/14) ReadableStream has already been used if request is reference multiple time
+
 # 1.2.3 - 27 Dec 2024
 Bug fix:
 - async module doesn't load (eg. @elysiajs/swagger)
