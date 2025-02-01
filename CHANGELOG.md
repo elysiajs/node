@@ -1,6 +1,12 @@
-# 1.2.4 - 9 Jan 2024
-Bug fix:
+# 1.2.5 - 1 Feb 2025
+- [#18](https://github.com/elysiajs/node/issues/18) reading cookie cause an error
+- Unable to set response status when error is thrown
+
+# 1.2.4 - 1 Feb 2025
+Change:
 - Support Elysia 1.2.11
+
+Bug fix:
 - [#23](https://github.com/elysiajs/node/issues/23) Response body object should not be disturbed or locked
 - [#15](https://github.com/elysiajs/node/issues/15) Possibly fix `ReadableStream` duplex issue?
 - [#14](https://github.com/elysiajs/node/issues/14) ReadableStream has already been used if request is reference multiple time

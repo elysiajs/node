@@ -73,9 +73,7 @@ describe('Node - Core', () => {
 			adapter: node()
 		})
 			.use(plugin)
-			.listen(8000, ({ port }) => {
-				console.log(`Server is running on http://localhost:${port}`)
-			})
+			.compile()
 
 		inject(
 			// @ts-ignore
@@ -94,6 +92,36 @@ describe('Node - Core', () => {
 				expect(res?.body).toBe(JSON.stringify({ message: 'Yugiri' }))
 				expect(res?.headers['content-type']).toBe(
 					'application/json;charset=utf8'
+				)
+			}
+		)
+	})
+
+	it('handle cookie', () => {
+		const app = new Elysia({ adapter: node() })
+			.use((app) =>
+				app
+					.derive({ as: 'global' }, async ({ cookie }) => {})
+					.onAfterHandle({ as: 'global' }, async ({ response }) => {
+						return response
+					})
+			)
+			.get('/', () => 'ok')
+			.compile()
+
+		inject(
+			// @ts-ignore
+			app._handle,
+			{
+				path: '/',
+				method: 'GET'
+			},
+			(error, res) => {
+				expect(error).toBeNull()
+
+				expect(res?.body).toBe('ok')
+				expect(res?.headers['content-type']).toBe(
+					'text/plain;charset=utf8'
 				)
 			}
 		)

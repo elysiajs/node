@@ -208,7 +208,7 @@ export const node = () => {
 				fnLiteral += `let _request\n` + `const c={`
 
 				// @ts-ignore protected
-				if (app.inference.request)
+				if (app.inference.request || app.inference.cookie)
 					fnLiteral +=
 						`get request(){` +
 						`if(_request)return _request\n` +
@@ -293,7 +293,7 @@ export const node = () => {
 				`res.end(error.message)\n` +
 				`return [error.message, context.set]`,
 			unknownError:
-				`context.set.status=error.status\n` +
+				`if(error.status)context.set.status=error.status\n` +
 				`res.writeHead(context.set.status, context.set.headers)\n` +
 				`res.end(error.message)\n` +
 				`return [error.message, context.set]`
