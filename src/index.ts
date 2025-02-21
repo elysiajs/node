@@ -406,20 +406,20 @@ export const node = () => {
 								server.unref()
 							},
 							reload() {
-								server.close()
-
-								server = createServer(
-									// @ts-expect-error private property
-									app._handle
-								).listen(
-									typeof options === 'number'
-										? options
-										: {
-												...options,
-												// @ts-ignore
-												host: options?.hostname
-											}
-								)
+								server.close(() => {
+									server = createServer(
+										// @ts-expect-error private property
+										app._handle
+									).listen(
+										typeof options === 'number'
+											? options
+											: {
+													...options,
+													// @ts-ignore
+													host: options?.hostname
+												}
+									)
+								})
 							},
 							requestIP() {
 								throw new Error(
