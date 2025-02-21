@@ -1,25 +1,29 @@
 import { Elysia } from 'elysia'
 import node from '../src'
 
-export const elysiaApp = new Elysia({
-	adapter: node()
-})
-	// .onError(({ error }) => {
-	// 	console.log(error)
-	// })
-	.patch('/', () => {
-		const form = new FormData()
-		form.append('name', 'Sancho')
-		form.append('alias', 'Don Quixote')
-
-		return form
+new Elysia({ adapter: node() })
+	.onError(({ error }) => {
+		return error
 	})
+	.derive(({ body }) => {
+		return {
+			operation: {
+				a: 'test',
+				body
+			}
+		}
+	})
+	.post(`/bug`, ({ operation }) => {
+		return operation
+	})
+	.listen(3777)
 
-export type ElysiaApp = typeof elysiaApp
-
-elysiaApp.listen(3334)
-console.log('Server started at http://localhost:3334')
-
-fetch('http://localhost:3334/', { method: 'PATCH' })
-	.then((x) => x.formData())
+fetch('http://localhost:3777/bug', {
+	method: 'POST',
+	headers: {
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({ operation: 'test' })
+})
+	.then((x) => x.text())
 	.then(console.log)

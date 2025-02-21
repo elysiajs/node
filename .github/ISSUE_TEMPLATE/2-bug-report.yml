@@ -21,6 +21,10 @@ body:
           description: Copy the output of `Elysia --revision`
     - type: input
       attributes:
+          label: What version of Node Adapter are you using?
+          description: Copy the output of `Elysia --revision`
+    - type: input
+      attributes:
           label: What platform is your computer?
           description: |
               For MacOS and Linux: copy the output of `uname -mprs`
