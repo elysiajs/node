@@ -1,29 +1,20 @@
 import { Elysia } from 'elysia'
 import node from '../src'
+import { mockRes } from '../test/utils'
+import { mapCompactResponse } from '../src/handler'
 
-new Elysia({ adapter: node() })
-	.onError(({ error }) => {
-		return error
-	})
-	.derive(({ body }) => {
-		return {
-			operation: {
-				a: 'test',
-				body
-			}
-		}
-	})
-	.post(`/bug`, ({ operation }) => {
-		return operation
-	})
-	.listen(3777)
+const res = mockRes()
 
-fetch('http://localhost:3777/bug', {
-	method: 'POST',
-	headers: {
-		'Content-Type': 'application/json'
-	},
-	body: JSON.stringify({ operation: 'test' })
-})
-	.then((x) => x.text())
-	.then(console.log)
+const form = new FormData()
+form.append('name', 'Sancho')
+form.append('alias', 'Don Quixote')
+
+const [response, set] = mapCompactResponse(form, res)
+
+console.log(response)
+
+// expect(response).toEqual(form)
+// expect(response).toEqual(res.body)
+
+// expect(set.status).toBe(200)
+// expect(set.status).toEqual(res.status)

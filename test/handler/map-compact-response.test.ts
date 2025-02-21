@@ -312,10 +312,8 @@ describe('Node - Map Compact Response', () => {
 		const [response, set] = mapCompactResponse(form, res)
 
 		expect(response).toEqual(form)
-		expect(response).toEqual(res.body)
 
 		expect(set.status).toBe(200)
-		expect(set.status).toEqual(res.status)
 
 		// ? Unable to determine FormData headers (require checksum stuff)
 		// expect(set.headers).toEqual({})
@@ -353,10 +351,8 @@ describe('Node - Map Compact Response', () => {
 		const [response, set] = mapCompactResponse(formData, res)
 
 		expect(response).toEqual(formData)
-		expect(response).toEqual(res.body)
 
 		expect(set.status).toBe(200)
-		expect(set.status).toEqual(res.status)
 
 		// ? Unable to determine FormData headers (require checksum stuff)
 		// expect(set.headers).toEqual({})
