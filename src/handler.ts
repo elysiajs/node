@@ -420,10 +420,12 @@ export const mapResponse = (
 			return mapResponse(response?.toString(), set, res)
 
 		case 'FormData':
-			if (res) {
-				res.writeHead(set.status!, set.headers)
-				res.end(response)
-			}
+			if (res)
+				responseToValue(
+					new Response(response as FormData),
+					res,
+					set as SetResponse
+				)
 
 			return [response as FormData, set as any]
 
@@ -686,10 +688,12 @@ export const mapEarlyResponse = (
 			return mapEarlyResponse(response?.toString(), set, res)
 
 		case 'FormData':
-			if (res) {
-				res.writeHead(set.status!, set.headers)
-				res.end(response)
-			}
+			if (res)
+				responseToValue(
+					new Response(response as FormData),
+					res,
+					set as SetResponse
+				)
 
 			return [response as FormData, set as any]
 
@@ -701,7 +705,11 @@ export const mapEarlyResponse = (
 				)
 
 				return [
-					responseToValue(response as Response, res, set as SetResponse),
+					responseToValue(
+						response as Response,
+						res,
+						set as SetResponse
+					),
 					set as any
 				]
 			}
@@ -793,317 +801,6 @@ export const mapCompactResponse = (
 		},
 		res
 	)
-
-	// switch (response?.constructor?.name) {
-	// 	case 'String':
-	// 		if (res) {
-	// 			res.writeHead(200, {
-	// 				'content-type': 'text/plain;charset=utf8',
-	// 				'content-length': (response as string).length
-	// 			})
-	// 			res.end(response)
-	// 		}
-
-	// 		return [
-	// 			response,
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'content-type': 'text/plain;charset=utf8',
-	// 					'content-length': (response as string).length
-	// 				}
-	// 			}
-	// 		]
-
-	// 	case 'Array':
-	// 	case 'Object':
-	// 		response = JSON.stringify(response)
-
-	// 		if (res) {
-	// 			res.writeHead(200, {
-	// 				'content-type': 'application/json;charset=utf8',
-	// 				'content-length': (response as string).length
-	// 			})
-	// 			res.end(response)
-	// 		}
-
-	// 		return [
-	// 			response,
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'content-type': 'application/json;charset=utf8',
-	// 					'content-length': (response as string).length
-	// 				}
-	// 			}
-	// 		]
-
-	// 	case 'ElysiaFile':
-	// 		return handleElysiaFile(response as ElysiaFile, undefined, res)
-
-	// 	case 'Blob':
-	// 		if (res) {
-	// 			res.writeHead(200)
-	// 			res.end(response)
-	// 		}
-
-	// 		return [
-	// 			response as File | Blob,
-	// 			{
-	// 				status: 200
-	// 			}
-	// 		]
-
-	// 	case 'ElysiaCustomStatusResponse':
-	// 		return mapResponse(
-	// 			(response as ElysiaCustomStatusResponse<200>).response,
-	// 			{
-	// 				status: (response as ElysiaCustomStatusResponse<200>).code,
-	// 				headers: {}
-	// 			},
-	// 			res
-	// 		)
-
-	// 	case 'ReadableStream':
-	// 		// abortSignal?.addEventListener(
-	// 		// 	'abort',
-	// 		// 	{
-	// 		// 		handleEvent() {
-	// 		// 			if (!abortSignal?.aborted)
-	// 		// 				(response as ReadableStream).cancel()
-	// 		// 		}
-	// 		// 	},
-	// 		// 	{
-	// 		// 		once: true
-	// 		// 	}
-	// 		// )
-	// 		//
-	// 		if (res) {
-	// 			res.writeHead(200, {
-	// 				'content-type': 'text/event-stream;charset=utf8'
-	// 			})
-	// 			readableStreamToReadable(response as ReadableStream).pipe(res)
-	// 		}
-
-	// 		return [
-	// 			response as ReadableStream,
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'Content-Type': 'text/event-stream;charset=utf8'
-	// 				}
-	// 			}
-	// 		]
-
-	// 	case undefined:
-	// 		if (!response) {
-	// 			if (res) {
-	// 				res.writeHead(200, {
-	// 					'content-type': 'text/plain;charset=utf8',
-	// 					'content-length': 0
-	// 				})
-	// 				res.end('')
-	// 			}
-
-	// 			return [
-	// 				'',
-	// 				{
-	// 					status: 200,
-	// 					headers: {
-	// 						'content-type': 'text/plain;charset=utf8',
-	// 						'content-length': 0 as any
-	// 					}
-	// 				}
-	// 			]
-	// 		}
-
-	// 		response = JSON.stringify(response)
-
-	// 		res?.writeHead(200, {
-	// 			'content-type': 'application/json;charset=utf8',
-	// 			'content-length': (response as string).length
-	// 		})
-
-	// 		return [
-	// 			response,
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'content-type': 'application/json;charset=utf8',
-	// 					'content-length': (response as string).length
-	// 				}
-	// 			}
-	// 		]
-
-	// 	case 'Response':
-	// 		if (
-	// 			(response as Response).headers.get('transfer-encoding') ===
-	// 			'chunked'
-	// 		)
-	// 			return handleStream(
-	// 				streamResponse(response as Response),
-	// 				undefined,
-	// 				res
-	// 			) as any
-
-	// 		const set = {
-	// 			status: 200,
-	// 			headers: {}
-	// 		}
-
-	// 		return [responseToValue(response as Response, res, set), set]
-
-	// 	case 'Error':
-	// 		return errorToResponse(response as Error, undefined, res)
-
-	// 	case 'Promise':
-	// 		// @ts-ignore
-	// 		return (response as any as Promise<unknown>).then((x) =>
-	// 			mapCompactResponse(x, res)
-	// 		)
-
-	// 	// ? Maybe response or Blob
-	// 	case 'Function':
-	// 		return mapCompactResponse((response as Function)(), res)
-
-	// 	case 'Number':
-	// 	case 'Boolean':
-	// 		response = (response as number | boolean).toString()
-
-	// 		if (res) {
-	// 			res.writeHead(200, {
-	// 				'content-type': 'text/plain;charset=utf8',
-	// 				'content-length': (response as string).length
-	// 			})
-	// 			res.end(response)
-	// 		}
-
-	// 		return [
-	// 			response,
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'content-type': 'text/plain;charset=utf8',
-	// 					'content-length': (response as string).length
-	// 				}
-	// 			}
-	// 		]
-
-	// 	case 'Cookie':
-	// 		if (response instanceof Cookie)
-	// 			return mapCompactResponse(response.value, res)
-
-	// 		if (res) {
-	// 			res.writeHead(200, {
-	// 				'content-type': 'text/plain;charset=utf8',
-	// 				'content-length': response?.toString()
-	// 			})
-	// 			res.end(response?.toString())
-	// 		}
-
-	// 		return [
-	// 			response?.toString(),
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'content-type': 'text/plain;charset=utf8'
-	// 				}
-	// 			}
-	// 		]
-
-	// 	case 'FormData':
-	// 		if (res) {
-	// 			res.writeHead(200)
-	// 			res.end(response)
-	// 		}
-
-	// 		return [
-	// 			response as FormData,
-	// 			{
-	// 				status: 200,
-	// 				headers: {}
-	// 			}
-	// 		]
-
-	// 	default:
-	// 		if (response instanceof Response) {
-	// 			const set = {
-	// 				status: 200,
-	// 				headers: {}
-	// 			}
-
-	// 			return [responseToValue(response, res, set), set]
-	// 		}
-
-	// 		if (response instanceof Promise)
-	// 			return response.then((x) => mapCompactResponse(x, res)) as any
-
-	// 		if (response instanceof Error)
-	// 			return errorToResponse(response as Error, undefined, res)
-
-	// 		if (response instanceof ElysiaCustomStatusResponse)
-	// 			return mapResponse(
-	// 				(response as ElysiaCustomStatusResponse<200>).response,
-	// 				{
-	// 					status: (response as ElysiaCustomStatusResponse<200>)
-	// 						.code,
-	// 					headers: {}
-	// 				},
-	// 				res
-	// 			)
-
-	// 		if (response instanceof ElysiaFile)
-	// 			return handleElysiaFile(response as ElysiaFile, undefined, res)
-
-	// 		// @ts-expect-error
-	// 		if (typeof response?.next === 'function')
-	// 			return handleStream(response as any, undefined, res)
-
-	// 		// @ts-expect-error
-	// 		if (typeof response?.then === 'function')
-	// 			// @ts-expect-error
-	// 			return response.then((x) => mapCompactResponse(x, res)) as any
-
-	// 		// @ts-expect-error
-	// 		if (typeof response?.toResponse === 'function')
-	// 			return mapCompactResponse((response as any).toResponse(), res)
-
-	// 		if ('charCodeAt' in (response as any)) {
-	// 			const code = (response as any).charCodeAt(0)
-
-	// 			if (code === 123 || code === 91) {
-	// 				response = JSON.stringify(response)
-
-	// 				if (res) {
-	// 					res.writeHead(200, {
-	// 						'content-type': 'application/json;charset=utf8',
-	// 						'content-length': (response as string).length
-	// 					})
-	// 					res.end(response)
-	// 				}
-
-	// 				return [response, { status: 200 } as any]
-	// 			}
-	// 		}
-
-	// 		if (res) {
-	// 			res.writeHead(200, {
-	// 				'content-type': 'text/plain;charset=utf8',
-	// 				'content-length': (response as string).length
-	// 			})
-	// 			res.end(response)
-	// 		}
-
-	// 		return [
-	// 			response as any,
-	// 			{
-	// 				status: 200,
-	// 				headers: {
-	// 					'content-type': 'text/plain;charset=utf8'
-	// 				}
-	// 			}
-	// 		]
-	// }
 }
 
 export const errorToResponse = (

@@ -171,7 +171,7 @@ export const attachWebSocket = (
 	})
 
 	const staticWsRouter = app.router.static.ws
-	const dynamicWsRouter = app.router.ws
+	const router = app.router.http
 	const history = app.router.history
 
 	server.on('upgrade', (request, socket, head) => {
@@ -184,9 +184,8 @@ export const attachWebSocket = (
 			if (index === undefined) return
 
 			const route = history[index]
-
 			if (!route) {
-				dynamicWsRouter.find('$INTERNALWS', path)
+				router.find('$INTERNALWS', path)
 				return
 			}
 

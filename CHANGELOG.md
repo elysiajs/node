@@ -1,3 +1,8 @@
+# 1.2.6 - 21 Feb 2025
+Bug fix:
+- [#34](https://github.com/elysiajs/node/issues/34) ERR_HTTP_HEADERS_SENT when sending FormData
+- [#29](https://github.com/elysiajs/node/issues/29), [#30](https://github.com/elysiajs/node/pull/30) server.reload() causes Uncaught AddrInUse: Address already in use
+
 # 1.2.5 - 1 Feb 2025
 Bug fix:
 - [#23](https://github.com/elysiajs/node/issues/23) Response body object should not be disturbed or locked

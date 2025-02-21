@@ -314,7 +314,6 @@ export const node = () => {
 			app.router.history.push({
 				method: '$INTERNALWS',
 				path,
-				compile: undefined as any,
 				composed: undefined as any,
 				handler: undefined as any,
 				hooks: lifecycle,
@@ -467,6 +466,7 @@ export const node = () => {
 
 				if (
 					isNotEmpty(app.router.static.ws) ||
+					app.router.http.root.ws ||
 					app.router.http.history.find((x) => x[0] === 'ws')
 				)
 					attachWebSocket(app, server)
