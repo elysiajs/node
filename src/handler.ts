@@ -143,6 +143,9 @@ const handleStream = (
 	const readable = new Readable({
 		read() {}
 	})
+	if (res) {
+		readable.pipe(res)
+	}
 	;(async () => {
 		let init = generator.next()
 		if (init instanceof Promise) init = await init
@@ -156,7 +159,9 @@ const handleStream = (
 			}
 		else {
 			set.headers['transfer-encoding'] = 'chunked'
-			set.headers['content-type'] = 'text/event-stream;charset=utf8'
+			if (!set.headers['content-type']) {
+				set.headers['content-type'] = 'text/event-stream;charset=utf8'
+			}
 		}
 	
 		if (res) res.writeHead(set.status as number, set.headers)
