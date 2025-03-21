@@ -410,7 +410,7 @@ export const node = () => {
 										// @ts-expect-error private property
 										app._handle
 									).listen(
-										typeof options === 'number'
+										typeof options === 'number' || typeof options === "string"
 											? options
 											: {
 													...options,

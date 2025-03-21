@@ -140,38 +140,26 @@ const handleStream = (
 	set?: Context['set'],
 	res?: HttpResponse
 ): ElysiaNodeResponse => {
-	if (!set)
-		set = {
-			status: 200,
-			headers: {
-				'transfer-encoding': 'chunked',
-				'content-type': 'text/event-stream;charset=utf8'
-			}
-		}
-	else {
-		set.headers['transfer-encoding'] = 'chunked'
-		set.headers['content-type'] = 'text/event-stream;charset=utf8'
-	}
-
-	if (res) res.writeHead(set.status as number, set.headers)
-
-	return [handleStreamResponse(generator, set, res), set as any]
-}
-
-export const handleStreamResponse = (
-	generator: Generator | AsyncGenerator,
-	set?: Context['set'],
-	res?: HttpResponse
-) => {
 	const readable = new Readable({
 		read() {}
 	})
-
-	if (res) readable.pipe(res)
 	;(async () => {
 		let init = generator.next()
 		if (init instanceof Promise) init = await init
-
+		if (!set)
+			set = {
+				status: 200,
+				headers: {
+					'transfer-encoding': 'chunked',
+					'content-type': 'text/event-stream;charset=utf8'
+				}
+			}
+		else {
+			set.headers['transfer-encoding'] = 'chunked'
+			set.headers['content-type'] = 'text/event-stream;charset=utf8'
+		}
+	
+		if (res) res.writeHead(set.status as number, set.headers)
 		if (init.done) {
 			if (set) return mapResponse(init.value, set, res)
 			return mapCompactResponse(init.value, res)
@@ -216,8 +204,12 @@ export const handleStreamResponse = (
 		readable.push(null)
 	})()
 
-	return readable
+	return [readable, set as any]
+	
+
 }
+
+
 
 export async function* streamResponse(response: Response) {
 	const body = response.body
