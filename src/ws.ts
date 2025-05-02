@@ -1,18 +1,25 @@
 import {
 	AnyElysia,
-	ELYSIA_REQUEST_ID,
 	redirect,
 	serializeCookie,
 	ValidationError,
 	type Context,
 	type TSchema
 } from 'elysia'
+import { parseQuery } from 'elysia/fast-querystring'
 import type { TypeCheck } from 'elysia/type-system'
 import { getSchemaValidator, isNotEmpty, randomId } from 'elysia/utils'
 
-import { createServer, IncomingMessage, OutgoingMessage } from 'http'
+import {
+	createServer,
+	IncomingMessage,
+	OutgoingMessage,
+	ServerResponse
+} from 'http'
+import { Socket } from 'net'
 
-import { nodeRequestToWebstand, ElysiaNodeContext } from '.'
+import { nodeRequestToWebStandard, ElysiaNodeContext, ElysiaNodeWebsocketResponse } from '.'
+import { ElysiaNodeResponse } from './handler'
 
 import { WebSocketServer } from 'ws'
 import type { WebSocket as NodeWebSocket } from 'ws'
@@ -147,15 +154,16 @@ export const requestToContext = (
 			qi,
 			path,
 			url,
+			query: qi === -1 ? {} : parseQuery(url.substring(qi + 1)),
 			set,
 			redirect,
 			get request() {
 				if (_request) return _request
-				return (_request = nodeRequestToWebstand(request))
+				return (_request = nodeRequestToWebStandard(request))
 			},
 			[ElysiaNodeContext]: {
 				req: request,
-				res: undefined
+				res: response
 			},
 			headers: request.headers
 		}
@@ -171,28 +179,39 @@ export const attachWebSocket = (
 	})
 
 	const staticWsRouter = app.router.static.ws
-	const router = app.router.http
 	const history = app.router.history
 
-	server.on('upgrade', (request, socket, head) => {
+	server.on('upgrade', async (request, socket: Socket, head) => {
+		const qi = request.url!.indexOf('?')
+		let path = request.url!
+		if (qi !== -1) path = request.url!.substring(0, qi)
+
+		const index = staticWsRouter[path]
+		if (index === undefined) return
+
+		const route = history[index]
+		if (!route) {
+			return
+		}
+
+		if (!route.websocket) return
+
+		const response = new ServerResponse(request)
+		response.assignSocket(socket)
+
+		const context = requestToContext(app, request, response)
+
+		if (typeof route.composed === 'function') {
+			const [content] = (await route.composed(
+				context
+			)) as unknown as ElysiaNodeResponse
+			if (content !== ElysiaNodeWebsocketResponse) return
+		}
+
 		wsServer.handleUpgrade(request, socket, head, async (ws) => {
-			const qi = request.url!.indexOf('?')
-			let path = request.url!
-			if (qi !== -1) path = request.url!.substring(0, qi)
-
-			const index = staticWsRouter[path]
-			if (index === undefined) return
-
-			const route = history[index]
-			if (!route) {
-				router.find('$INTERNALWS', path)
-				return
-			}
-
-			if (!route.websocket) return
 			const websocket: AnyWSLocalHook = route.websocket
 
-			const validateMessage = getSchemaValidator(route.hooks.body, {
+			const validateMessage = getSchemaValidator(route.websocket.body, {
 				// @ts-expect-error private property
 				modules: app.definitions.typebox,
 				// @ts-expect-error private property
@@ -201,7 +220,7 @@ export const attachWebSocket = (
 			})
 
 			const validateResponse = getSchemaValidator(
-				route.hooks.response as any,
+				route.websocket.response,
 				{
 					// @ts-expect-error private property
 					modules: app.definitions.typebox,
@@ -214,7 +233,6 @@ export const attachWebSocket = (
 			const parseMessage = createWSMessageParser(route.hooks.parse)
 			const handleResponse = createHandleWSResponse(validateResponse)
 
-			const context = requestToContext(app, request, undefined as any)
 			const set = context.set
 
 			if (set.cookie && isNotEmpty(set.cookie)) {
@@ -295,8 +313,11 @@ export const attachWebSocket = (
 				)
 
 			if (websocket.message)
-				ws.on('message', async (_message) => {
-					const message = await parseMessage(elysiaWS, _message)
+				ws.on('message', async (_message, isBinary) => {
+					const message = await parseMessage(
+						elysiaWS,
+						isBinary ? _message : _message.toString()
+					)
 
 					if (validateMessage?.Check(message) === false)
 						return void ws.send(

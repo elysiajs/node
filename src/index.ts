@@ -7,12 +7,7 @@ import formidable from 'formidable'
 import { Elysia } from 'elysia'
 import type { Server } from 'elysia/universal'
 
-import {
-	isNotEmpty,
-	isNumericString,
-	mergeLifeCycle,
-	randomId
-} from 'elysia/utils'
+import { isNotEmpty, isNumericString, randomId } from 'elysia/utils'
 import { type ElysiaAdapter } from 'elysia/adapter'
 
 import { mapResponse, mapEarlyResponse, mapCompactResponse } from './handler'
@@ -26,6 +21,7 @@ import {
 } from './utils'
 
 export const ElysiaNodeContext = Symbol('ElysiaNodeContext')
+export const ElysiaNodeWebsocketResponse = Symbol('ElysiaNodeWebsocketResponse')
 
 const getUrl = (req: IncomingMessage) => {
 	if (req.headers.host) return `http://${req.headers.host}${req.url}`
@@ -36,7 +32,7 @@ const getUrl = (req: IncomingMessage) => {
 	return `http://localhost${req.url}`
 }
 
-export const nodeRequestToWebstand = (
+export const nodeRequestToWebStandard = (
 	req: IncomingMessage,
 	abortController?: AbortController
 ) => {
@@ -87,7 +83,7 @@ export const node = () => {
 						`Object.defineProperty(c,'request',{` +
 						`get(){` +
 						`if(_request)return _request\n` +
-						`return _request=nodeRequestToWebstand(c[ElysiaNodeContext].req)` +
+						`return _request=nodeRequestToWebStandard(c[ElysiaNodeContext].req)` +
 						`}` +
 						`})` +
 						'}\n'
@@ -97,7 +93,7 @@ export const node = () => {
 			headers: `c.headers=c[ElysiaNodeContext].req.headers\n`,
 			inject: {
 				ElysiaNodeContext,
-				nodeRequestToWebstand,
+				nodeRequestToWebStandard,
 				formidable,
 				readFileToWebStandardFile,
 				unwrapArrayIfSingle
@@ -191,7 +187,7 @@ export const node = () => {
 		composeGeneralHandler: {
 			parameters: 'r,res',
 			inject: {
-				nodeRequestToWebstand,
+				nodeRequestToWebStandard,
 				ElysiaNodeContext
 			},
 			createContext: (app) => {
@@ -219,7 +215,7 @@ export const node = () => {
 					fnLiteral +=
 						`get request(){` +
 						`if(_request)return _request\n` +
-						`return _request = nodeRequestToWebstand(r)` +
+						`return _request = nodeRequestToWebStandard(r)` +
 						`},`
 
 				fnLiteral +=
@@ -306,20 +302,15 @@ export const node = () => {
 				`return [error.message, context.set]`
 		},
 		ws(app, path, options) {
-			const key = Object.keys(app.router.static.ws).length
+			const key = Object.keys(app.router.history).length
 			app.router.static.ws[path] = key
 
-			const lifecycle = mergeLifeCycle(options, {})
-
-			app.router.history.push({
-				method: '$INTERNALWS',
-				path,
-				composed: undefined as any,
-				handler: undefined as any,
-				hooks: lifecycle,
-				websocket: options
+			const { parse, body, response, ...rest } = options
+			app.route('$INTERNALWS', path, () => ElysiaNodeWebsocketResponse, {
+				...rest,
+				websocket: options,
+				webSocket: options
 			})
-			app.router.http.history.push(['$INTERNALWS', path, options])
 		},
 		listen(app) {
 			return (options, callback) => {
@@ -347,29 +338,27 @@ export const node = () => {
 				// @ts-expect-error closest possible type
 				app.server = serverInfo
 
-				let server = createServer(
-					// @ts-expect-error private property
-					app._handle
-				).listen(
+				// @ts-expect-error private property
+				let handle = app._handle
+
+				const server = createServer((...a) => handle?.(...a)).listen(
 					typeof options === 'number'
 						? options
 						: {
 								...options,
 								// @ts-ignore
 								host: options?.hostname
-							},
+						  },
 					() => {
 						const address = server.address()
 						const hostname =
 							typeof address === 'string'
 								? address
 								: address
-									? address.address
-									: 'localhost'
+								? address.address
+								: 'localhost'
 						const port =
-							typeof address === 'string'
-								? 0
-								: (address?.port ?? 0)
+							typeof address === 'string' ? 0 : address?.port ?? 0
 
 						const serverInfo: Server = {
 							id: randomId(),
@@ -405,20 +394,8 @@ export const node = () => {
 								server.unref()
 							},
 							reload() {
-								server.close(() => {
-									server = createServer(
-										// @ts-expect-error private property
-										app._handle
-									).listen(
-										typeof options === 'number'
-											? options
-											: {
-													...options,
-													// @ts-ignore
-													host: options?.hostname
-												}
-									)
-								})
+								// @ts-expect-error private property
+								handle = app._handle
 							},
 							requestIP() {
 								throw new Error(
@@ -434,7 +411,9 @@ export const node = () => {
 								)
 							},
 							url: new URL(
-								`http://${hostname === '::' ? 'localhost' : hostname}:${port}`
+								`http://${
+									hostname === '::' ? 'localhost' : hostname
+								}:${port}`
 							),
 							[Symbol.dispose]() {
 								server.close()
@@ -454,7 +433,7 @@ export const node = () => {
 										? (options as any)
 										: {
 												port: options
-											}
+										  }
 								)
 							} catch {}
 						})
