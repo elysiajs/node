@@ -1,8 +1,6 @@
 /* eslint-disable sonarjs/no-duplicated-branches */
 /* eslint-disable sonarjs/no-nested-switch */
 /* eslint-disable sonarjs/no-duplicate-string */
-import { serialize } from 'cookie'
-
 import type { IncomingMessage, ServerResponse } from 'http'
 import { Readable } from 'stream'
 
@@ -16,6 +14,8 @@ import type { Context } from 'elysia/context'
 import type { HTTPHeaders, Prettify } from 'elysia/types'
 
 import type { ReadStream } from 'fs'
+
+import { ElysiaNodeWebsocketResponse } from '.'
 
 type SetResponse = Prettify<
 	Omit<Context['set'], 'status'> & {
@@ -71,8 +71,9 @@ const handleFile = (
 	if (res)
 		return response.arrayBuffer().then((arrayBuffer) => {
 			set!.headers['content-type'] = response.type
-			set!.headers['content-range'] =
-				`bytes 0-${arrayBuffer.byteLength - 1}/${arrayBuffer.byteLength}`
+			set!.headers['content-range'] = `bytes 0-${
+				arrayBuffer.byteLength - 1
+			}/${arrayBuffer.byteLength}`
 
 			delete set?.headers['content-length']
 
@@ -259,6 +260,12 @@ export const mapResponse = (
 	}
 
 	switch (response?.constructor?.name) {
+		case 'Symbol': {
+			switch (response) {
+				case ElysiaNodeWebsocketResponse:
+					return [ElysiaNodeWebsocketResponse, set as any]
+			}
+		}
 		case 'String':
 			set.headers['content-type'] = 'text/plain;charset=utf8'
 
