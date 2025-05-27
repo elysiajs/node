@@ -15,3 +15,7 @@ const app = new Elysia({ adapter: node() })
     .get('/', () => 'Hello Node!')
     .listen(3000)
 ```
+
+### Note
+Node adapter is not feature complete yet. Some features are not supported, such as:
+- not support `ws` method

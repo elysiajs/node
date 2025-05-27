@@ -1,39 +1,27 @@
 {
 	"name": "@elysiajs/node",
-	"version": "1.2.6",
+	"version": "1.3.0",
 	"description": "Plugin for Elysia for retreiving Bearer token",
 	"license": "MIT",
 	"scripts": {
 		"dev": "tsx --watch ./example/index.ts",
-		"test": "vitest run",
+		"test": "bun run test:node",
 		"test:node": "npm install --prefix ./test/node/cjs/ && npm install --prefix ./test/node/esm/ && node ./test/node/cjs/index.js && node ./test/node/esm/index.js",
 		"build": "bun build.ts",
 		"release": "npm run build && npm run test && npm publish --access public"
 	},
 	"dependencies": {
-		"formidable": "^3.5.2",
-		"ws": "^8.18.0"
+		"@hono/node-server": "^1.14.3"
 	},
 	"peerDependencies": {
-		"elysia": ">= 1.2.7",
-		"bufferutil": ">= 4.0.1",
-		"formidable": ">= 3.5.2",
-		"ws": ">= 8.18.0"
-	},
-	"peerDependenciesMeta": {
-		"bufferutil": {
-			"optional": true
-		}
+		"elysia": ">= 1.3.3"
 	},
 	"devDependencies": {
-		"@elysiajs/cors": "^1.2.0",
-		"@elysiajs/swagger": "^1.2.0",
-		"@types/formidable": "^3.4.5",
+		"@elysiajs/cors": "^1.3.0",
+		"@elysiajs/swagger": "^1.3.0",
 		"@types/node": "^22.10.2",
-		"@types/ws": "^8.5.13",
-		"elysia": "1.2.11",
+		"elysia": "^1.3.3",
 		"eslint": "9.17.0",
-		"light-my-request": "^6.4.0",
 		"tsup": "^8.3.5",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.2",
@@ -48,16 +36,6 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.mjs",
 			"require": "./dist/cjs/index.js"
-		},
-		"./handler": {
-			"types": "./dist/handler.d.ts",
-			"import": "./dist/handler.mjs",
-			"require": "./dist/cjs/handler.js"
-		},
-		"./ws": {
-			"types": "./dist/ws.d.ts",
-			"import": "./dist/ws.mjs",
-			"require": "./dist/cjs/ws.js"
 		}
 	},
 	"keywords": [

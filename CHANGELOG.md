@@ -1,3 +1,7 @@
+# 1.3.0 - 27 May 2025
+Change:
+- use WebStandard Compatibility via `@hono/node-server`
+
 # 1.2.6 - 21 Feb 2025
 Bug fix:
 - [#34](https://github.com/elysiajs/node/issues/34) ERR_HTTP_HEADERS_SENT when sending FormData
