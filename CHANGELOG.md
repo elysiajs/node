@@ -1,3 +1,25 @@
+# 1.4.0 - 27 July 2025
+
+### Added
+- Full WebSocket support with publish/subscribe API
+- WebSocket lifecycle events (open, message, close)
+- `UwsWebSocketWrapper` class for Elysia WebSocket compatibility
+
+### Changed
+- **BREAKING**: Upgraded to uWebSockets.js for high performance
+- Refactored server architecture for Bun runtime compatibility
+- Enhanced streaming request/response handling
+
+### Improved
+- Near 1:1 API compatibility with Bun adapter
+- Better error handling for WebSocket upgrades
+- Streamlined server setup and route registration
+
+### Technical
+- Added `createWebRequest` and `applyResponse` utilities
+- Integrated with Elysia's WebSocket validation system
+- Support for binary/text WebSocket messages
+
 # 1.3.0 - 27 May 2025
 Change:
 - use WebStandard Compatibility via `@hono/node-server`
