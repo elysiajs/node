@@ -37,20 +37,6 @@ import {
 import { ServerWebSocket } from 'elysia/ws/bun'
 import { parseSetCookies } from 'elysia/adapter/utils'
 
-const toServerWebSocket = (ws: ServerWebSocket) => {
-	// @ts-ignore, context.context is intentional
-	// first context is srvx.context (alias of bun.ws.data)
-	// second context is Elysia context
-	ws.data = ws.context.context
-	ws.sendText = ws.send
-	ws.sendBinary = ws.send
-	ws.publishText = ws.publish
-	ws.publishBinary = ws.publish
-	ws.isSubscribed = () => false
-	// @ts-ignore
-	ws.cork = () => {}
-}
-
 export const node = () => {
 	const wsState: Record<string, unknown> = {}
 
@@ -81,6 +67,32 @@ export const node = () => {
 				models: app.definitions.type as Record<string, TSchema>,
 				normalize: app.config.normalize
 			})
+
+			const subscribed: Record<string, 1> = {}
+
+			const toServerWebSocket = (ws: ServerWebSocket) => {
+				// @ts-ignore, context.context is intentional
+				// first context is srvx.context (alias of bun.ws.data)
+				// second context is Elysia context
+				ws.data = ws.context.context
+				ws.sendText = ws.send
+				ws.sendBinary = ws.send
+				ws.publishText = ws.publish
+				ws.publishBinary = ws.publish
+				ws.subscribe = (topic: string) => {
+					subscribed[topic] = 1
+					ws.subscribe(topic)
+				}
+				ws.unsubscribe = (topic: string) => {
+					delete subscribed[topic]
+					ws.unsubscribe(topic)
+				}
+				ws.isSubscribed = (topic: string) => topic in subscribed
+				// @ts-ignore
+				ws.cork = () => {
+					console.log('ws.cork is not supported yet')
+				}
+			}
 
 			app.route(
 				'WS',
@@ -299,11 +311,13 @@ export const node = () => {
 					typeof options === 'number'
 						? {
 								port: options,
+								silent: true,
 								websocket,
 								fetch: app.fetch
 							}
 						: {
 								...options,
+								silent: true,
 								websocket,
 								fetch: app.fetch
 							}

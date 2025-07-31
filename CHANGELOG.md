@@ -3,7 +3,7 @@ Change:
 - use srvx, crossws
 
 Improvement:
-- support WebSocket (cork, and isSubscribed is not implemented yet)
+- support full WebSocket
 - support `ElysiaFile` `content-type`, and `content-range`
 
 # 1.3.0 - 27 May 2025
