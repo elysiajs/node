@@ -9,7 +9,7 @@ const app = new Elysia({
 })
 	.use(cors())
 	.use(swagger())
-	.get('/image', async () => file('test/kyuukurarin.mp4'))
+	.get('/image', async () => file('test/images/midori.png'))
 	.get('/generator', async function* () {
 		for (let i = 0; i < 100; i++) {
 			await new Promise(resolve => setTimeout(resolve, 10))
