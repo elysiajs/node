@@ -17,7 +17,7 @@ const app = new Elysia({
 			ws.send(message)
 		}
 	})
-	.get('/image', async () => file('test/images/midori.png'))
+	.get('/image', async () => file('test/kyuukurarin.mp4'))
 	.get('/generator', async function* () {
 		for (let i = 0; i < 100; i++) {
 			await new Promise((resolve) => setTimeout(resolve, 10))

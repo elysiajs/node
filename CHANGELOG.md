@@ -1,3 +1,11 @@
+# 1.3.1
+Change:
+- use srvx, crossws
+
+Improvement:
+- support WebSocket (cork, and isSubscribed is not implemented yet)
+- support `ElysiaFile` `content-type`, and `content-range`
+
 # 1.3.0 - 27 May 2025
 Change:
 - use WebStandard Compatibility via `@hono/node-server`

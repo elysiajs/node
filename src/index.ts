@@ -8,7 +8,13 @@ import { WebStandardAdapter } from 'elysia/adapter/web-standard'
 
 import { defineHooks } from 'crossws'
 import { serve } from 'crossws/server'
-import { FastResponse } from 'srvx'
+
+import {
+	mapCompactResponse,
+	mapEarlyResponse,
+	mapResponse,
+	createStaticHandler
+} from './handle'
 
 import type {
 	Server as NodeServer,
@@ -49,6 +55,12 @@ export const node = () => {
 	return {
 		...WebStandardAdapter,
 		name: 'node',
+		handler: {
+			mapCompactResponse,
+			mapEarlyResponse,
+			mapResponse,
+			createStaticHandler
+		},
 		ws(app, path, options) {
 			const { parse, body, response, ...rest } = options
 
@@ -169,7 +181,6 @@ export const node = () => {
 									)
 								)
 							} catch (error) {
-								console.log(error)
 								handleErrors(ws, error)
 							}
 						},
@@ -204,7 +215,6 @@ export const node = () => {
 									)
 								)
 							} catch (error) {
-								console.log(error)
 								handleErrors(ws, error)
 							}
 						},
