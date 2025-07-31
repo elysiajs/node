@@ -1,6 +1,8 @@
-import type { Context } from 'elysia/context'
-import { isNotEmpty } from 'elysia/utils'
+import { FastResponse as Response } from 'srvx'
 import type { ReadStream } from 'fs'
+
+import { isNotEmpty } from 'elysia/utils'
+import type { Context } from 'elysia/context'
 
 export const handleFile = (
 	response: ReadStream | File | Blob,

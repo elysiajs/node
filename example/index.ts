@@ -9,9 +9,9 @@ const app = new Elysia({
 })
 	.use(cors())
 	.use(swagger())
-	.ws('/ws', {
-		open() {
-			console.log('OPENED')
+	.ws('/ws/:id', {
+		open({ data }) {
+			console.log(data.params)
 		},
 		message(ws, message) {
 			ws.send(message)

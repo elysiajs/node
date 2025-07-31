@@ -38,8 +38,10 @@ import { ServerWebSocket } from 'elysia/ws/bun'
 import { parseSetCookies } from 'elysia/adapter/utils'
 
 const toServerWebSocket = (ws: ServerWebSocket) => {
-	// @ts-ignore
-	ws.data = ws.context
+	// @ts-ignore, context.context is intentional
+	// first context is srvx.context (alias of bun.ws.data)
+	// second context is Elysia context
+	ws.data = ws.context.context
 	ws.sendText = ws.send
 	ws.sendBinary = ws.send
 	ws.publishText = ws.publish
