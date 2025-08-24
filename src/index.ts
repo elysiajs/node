@@ -22,7 +22,6 @@ export const node = () => {
 				const { promise: serverInfo, resolve: setServerInfo } =
 					Promise.withResolvers<Server>()
 
-				// @ts-expect-error closest possible type
 				app.server = serverInfo
 
 				const serverOptions: any =
@@ -55,7 +54,6 @@ export const node = () => {
 						development: process.env.NODE_ENV !== 'production',
 						fetch: app.fetch,
 						hostname,
-						// @ts-expect-error
 						get pendingRequests() {
 							const { promise, resolve, reject } =
 								Promise.withResolvers<number>()
@@ -107,7 +105,6 @@ export const node = () => {
 						[Symbol.dispose]() {
 							server.close()
 						},
-						// @ts-expect-error additional property
 						raw: server
 					} satisfies Server
 

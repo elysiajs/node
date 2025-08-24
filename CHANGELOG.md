@@ -1,3 +1,8 @@
+# 1.3.1 - 24 Aug 2025
+Change:
+- update `@hono/node-server` to 1.19.0
+- minimum support for Elysia is set to 1.3.18
+
 # 1.3.0 - 27 May 2025
 Change:
 - use WebStandard Compatibility via `@hono/node-server`
