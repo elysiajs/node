@@ -1,191 +1,253 @@
-// import {
-// 	AnyElysia,
-// 	serializeCookie,
-// 	ValidationError,
-// 	type TSchema
-// } from 'elysia'
-// import { isNotEmpty, randomId } from 'elysia/utils'
-// import { getSchemaValidator } from 'elysia/schema'
+import { Peer, WSError } from 'crossws'
+import {
+	Context,
+	getSchemaValidator,
+	serializeCookie,
+	ValidationError,
+	type AnyElysia
+} from 'elysia'
+import { parseSetCookies } from 'elysia/adapter/utils'
+import { ElysiaTypeCheck } from 'elysia/schema'
+import { isNotEmpty } from 'elysia/utils'
+import {
+	createHandleWSResponse,
+	createWSMessageParser,
+	ElysiaWS
+} from 'elysia/ws'
+import type { ServerWebSocket } from 'elysia/ws/bun'
+import type { AnyWSLocalHook } from 'elysia/ws/types'
 
-// import { createServer } from 'http'
+export interface NodeWebSocketContext {
+	data: Context
+	validateResponse: ElysiaTypeCheck<any> | undefined
+	ping: ElysiaWS['ping']
+	pong: ElysiaWS['pong']
+	open(ws: Peer): Promise<void>
+	message(ws: ServerWebSocket<any>, message: string): Promise<void>
+	drain(ws: ServerWebSocket<any>): Promise<void>
+	close(ws: ServerWebSocket<any>, code: number, reason: string): Promise<void>
+	error(ws: ServerWebSocket<any>, error: WSError): void
+}
 
-// import { WebSocketServer } from 'ws'
-// import type { WebSocket as NodeWebSocket } from 'ws'
-// import {
-// 	createHandleWSResponse,
-// 	createWSMessageParser,
-// 	ElysiaWS
-// } from 'elysia/ws'
-// import type { ServerWebSocket } from 'elysia/ws/bun'
-// import { parseSetCookies } from 'elysia/adapter/web-standard/handler'
+export interface NodeWebSocketPeer extends Omit<Peer, 'context'> {
+	context: NodeWebSocketContext
+}
 
-// import type { AnyWSLocalHook } from 'elysia/ws/types'
+export function createWebSocketAdapter() {
+	const store: Record<string, NodeWebSocketContext> = {}
 
-// export const attachWebSocket = (
-// 	app: AnyElysia,
-// 	server: ReturnType<typeof createServer>
-// ) => {
-// 	const wsServer = new WebSocketServer({
-// 		noServer: true
-// 	})
+	function handler(app: AnyElysia, path: string, options: AnyWSLocalHook) {
+		const { parse, body, response, ...rest } = options
 
-// 	const staticWsRouter = app.router.static.ws
-// 	const router = app.router.http
-// 	const history = app.router.history
+		const validateMessage = getSchemaValidator(body, {
+			// @ts-expect-error private property
+			modules: app.definitions.typebox,
+			// @ts-expect-error private property
+			models: app.definitions.type as Record<string, TSchema>,
+			normalize: app.config.normalize
+		})
 
-// 	server.on('upgrade', (request, socket, head) => {
-// 		wsServer.handleUpgrade(request, socket, head, async (ws) => {
-// 			const qi = request.url!.indexOf('?')
-// 			let path = request.url!
-// 			if (qi !== -1) path = request.url!.substring(0, qi)
+		const validateResponse = getSchemaValidator(response as any, {
+			// @ts-expect-error private property
+			modules: app.definitions.typebox,
+			// @ts-expect-error private property
+			models: app.definitions.type as Record<string, TSchema>,
+			normalize: app.config.normalize
+		})
 
-// 			const index = staticWsRouter[path]
-// 			if (index === undefined) return
+		const toServerWebSocket = (peer: Peer) => {
+			const ws = peer as any as ServerWebSocket<any>
 
-// 			const route = history[index]
-// 			if (!route) {
-// 				router.find('$INTERNALWS', path)
-// 				return
-// 			}
+			// @ts-ignore, context.context is intentional
+			// first context is srvx.context (alias of bun.ws.data)
+			// second context is Elysia context
+			ws.data = peer.context.context
+			ws.sendText = ws.send
+			ws.sendBinary = ws.send
+			ws.publishText = ws.publish
+			ws.publishBinary = ws.publish
+			ws.isSubscribed = (topic: string) => peer.topics.has(topic)
+			// @ts-ignore
+			ws.cork = () => {
+				console.log('ws.cork is not supported yet')
+			}
 
-// 			if (!route.websocket) return
-// 			const websocket: AnyWSLocalHook = route.websocket
+			return ws
+		}
 
-// 			const validateMessage = getSchemaValidator(route.hooks.body, {
-// 				// @ts-expect-error private property
-// 				modules: app.definitions.typebox,
-// 				// @ts-expect-error private property
-// 				models: app.definitions.type as Record<string, TSchema>,
-// 				normalize: app.config.normalize
-// 			})
+		app.route(
+			'WS',
+			path as any,
+			// @ts-ignore
+			async (context: Context) => {
+				// ! Enable static code analysis just in case resolveUnknownFunction doesn't work, do not remove
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				// @ts-ignore
+				const { set, path, qi, headers, query, params } = context
 
-// 			const validateResponse = getSchemaValidator(
-// 				route.hooks.response as any,
-// 				{
-// 					// @ts-expect-error private property
-// 					modules: app.definitions.typebox,
-// 					// @ts-expect-error private property
-// 					models: app.definitions.type as Record<string, TSchema>,
-// 					normalize: app.config.normalize
-// 				}
-// 			)
+				// @ts-ignore
+				const id = context.request.wsId
 
-// 			const parseMessage = createWSMessageParser(route.hooks.parse)
-// 			const handleResponse = createHandleWSResponse(validateResponse)
+				// @ts-ignore
+				context.validator = validateResponse
 
-// 			const context = requestToContext(app, request, undefined as any)
-// 			const set = context.set
+				if (options.upgrade) {
+					if (typeof options.upgrade === 'function') {
+						const temp = options.upgrade(context as any)
+						if (temp instanceof Promise) await temp
+					} else if (options.upgrade)
+						Object.assign(
+							set.headers,
+							options.upgrade as Record<string, any>
+						)
+				}
 
-// 			if (set.cookie && isNotEmpty(set.cookie)) {
-// 				const cookie = serializeCookie(set.cookie)
+				if (set.cookie && isNotEmpty(set.cookie)) {
+					const cookie = serializeCookie(set.cookie)
 
-// 				if (cookie) set.headers['set-cookie'] = cookie
-// 			}
+					if (cookie) set.headers['set-cookie'] = cookie
+				}
 
-// 			if (
-// 				set.headers['set-cookie'] &&
-// 				Array.isArray(set.headers['set-cookie'])
-// 			)
-// 				set.headers = parseSetCookies(
-// 					new Headers(set.headers as any) as Headers,
-// 					set.headers['set-cookie']
-// 				) as any
+				if (
+					set.headers['set-cookie'] &&
+					Array.isArray(set.headers['set-cookie'])
+				)
+					set.headers = parseSetCookies(
+						new Headers(set.headers as any) as Headers,
+						set.headers['set-cookie']
+					) as any
 
-// 			if (route.hooks.upgrade) {
-// 				if (typeof route.hooks.upgrade === 'function') {
-// 					const temp = route.hooks.upgrade(context as any)
-// 					if (temp instanceof Promise) await temp
+				const handleResponse = createHandleWSResponse(validateResponse)
+				const parseMessage = parse
+					? createWSMessageParser(parse)
+					: undefined
 
-// 					Object.assign(set.headers, context.set.headers)
-// 				} else if (route.hooks.upgrade)
-// 					Object.assign(
-// 						set.headers,
-// 						route.hooks.upgrade as Record<string, any>
-// 					)
-// 			}
+				if (typeof options.beforeHandle === 'function') {
+					const result = options.beforeHandle(context)
+					if (result instanceof Promise) await result
+				}
 
-// 			if (route.hooks.transform)
-// 				for (let i = 0; i < route.hooks.transform.length; i++) {
-// 					const hook = route.hooks.transform[i]
-// 					const operation = hook.fn(context)
+				const errorHandlers = [
+					...(options.error
+						? Array.isArray(options.error)
+							? options.error
+							: [options.error]
+						: []),
+					...(app.event.error ?? []).map((x) =>
+						typeof x === 'function' ? x : x.fn
+					)
+				].filter((x) => x)
 
-// 					if (hook.subType === 'derive') {
-// 						if (operation instanceof Promise)
-// 							Object.assign(context, await operation)
-// 						else Object.assign(context, operation)
-// 					} else if (operation instanceof Promise) await operation
-// 				}
+				const handleErrors = errorHandlers.length
+					? async (ws: ServerWebSocket<any>, error: unknown) => {
+							for (const handleError of errorHandlers) {
+								let response = handleError(
+									Object.assign(context, { error })
+								)
+								if (response instanceof Promise)
+									response = await response
 
-// 			if (route.hooks.beforeHandle)
-// 				for (let i = 0; i < route.hooks.beforeHandle.length; i++) {
-// 					const hook = route.hooks.beforeHandle[i]
-// 					let response = hook.fn(context)
+								await handleResponse(ws, response)
 
-// 					if (hook.subType === 'resolve') {
-// 						if (response instanceof Promise)
-// 							Object.assign(context, await response)
-// 						else Object.assign(context, response)
+								if (response) break
+							}
+						}
+					: undefined
 
-// 						continue
-// 					} else if (response instanceof Promise)
-// 						response = await response
-// 				}
+				store[id] = {
+					data: context,
+					validateResponse,
+					ping(data?: unknown) {
+						return options.ping?.(data) as number
+					},
+					pong(data?: unknown) {
+						return options.pong?.(data) as number
+					},
+					async open(_ws) {
+						const ws = toServerWebSocket(_ws)
 
-// 			let _id: string | undefined
-// 			Object.assign(context, {
-// 				get id() {
-// 					if (_id) return _id
+						try {
+							await handleResponse(
+								ws,
+								options.open?.(new ElysiaWS(ws, context as any))
+							)
+						} catch (error) {
+							handleErrors?.(ws, error)
+						}
+					},
+					async message(ws, message) {
+						if (message.includes('ping')) {
+							try {
+								return void ws.pong(message)
+							} catch (error) {
+								handleErrors?.(ws, error)
+							}
+						}
 
-// 					return (_id = randomId())
-// 				},
-// 				validator: validateResponse
-// 			})
+						if (parseMessage)
+							message = await parseMessage(ws, message)
 
-// 			const elysiaWS = nodeWebSocketToServerWebSocket(
-// 				ws,
-// 				wsServer,
-// 				context as any
-// 			)
+						if (message)
+							if (validateMessage?.Check(message) === false)
+								return void ws.send(
+									new ValidationError(
+										'message',
+										validateMessage,
+										message
+									).message as string
+								)
 
-// 			if (websocket.open)
-// 				handleResponse(
-// 					elysiaWS,
-// 					websocket.open!(new ElysiaWS(elysiaWS, context as any))
-// 				)
+						try {
+							await handleResponse(
+								ws,
+								options.message?.(
+									new ElysiaWS(ws, context as any, message),
+									message as any
+								)
+							)
+						} catch (error) {
+							handleErrors?.(ws, error)
+						}
+					},
+					async drain(ws) {
+						try {
+							await handleResponse(
+								ws,
+								options.drain?.(
+									new ElysiaWS(ws, context as any)
+								)
+							)
+						} catch (error) {
+							handleErrors?.(ws, error)
+						}
+					},
+					async close(ws, code, reason) {
+						try {
+							await handleResponse(
+								ws,
+								options.close?.(
+									new ElysiaWS(ws, context as any),
+									code,
+									reason
+								)
+							)
+						} catch (error) {
+							handleErrors?.(ws, error)
+						}
+					},
+					error(ws, error) {
+						handleErrors?.(ws, error)
+					}
+				}
 
-// 			if (websocket.message)
-// 				ws.on('message', async (_message) => {
-// 					const message = await parseMessage(elysiaWS, _message)
+				return ''
+			},
+			{
+				...rest,
+				websocket: options
+			} as any
+		)
+	}
 
-// 					if (validateMessage?.Check(message) === false)
-// 						return void ws.send(
-// 							new ValidationError(
-// 								'message',
-// 								validateMessage,
-// 								message
-// 							).message as string
-// 						)
-
-// 					handleResponse(
-// 						elysiaWS,
-// 						websocket.message!(
-// 							new ElysiaWS(elysiaWS, context as any, message),
-// 							message
-// 						)
-// 					)
-// 				})
-
-// 			if (websocket.close)
-// 				ws.on('close', (code, reason) => {
-// 					handleResponse(
-// 						elysiaWS,
-// 						websocket.close!(
-// 							new ElysiaWS(elysiaWS, context as any),
-// 							code,
-// 							reason.toString()
-// 						)
-// 					)
-// 				})
-// 		})
-// 	})
-// }
+	return { handler, context: store }
+}

@@ -1,15 +1,46 @@
+import type {
+	Server as NodeServer,
+	IncomingMessage,
+	ServerResponse
+} from 'http'
+import type {
+	Http2Server,
+	Http2ServerRequest,
+	Http2ServerResponse
+} from 'http2'
+
 import type { ElysiaAdapter } from 'elysia'
 import { WebStandardAdapter } from 'elysia/adapter/web-standard'
 
-import { serve } from '@hono/node-server'
-
-import { isNumericString, randomId } from 'elysia/utils'
 import type { Server } from 'elysia/universal'
+import { isNumericString, randomId } from 'elysia/utils'
+
+import { defineHooks } from 'crossws'
+import { serve } from 'crossws/server'
+
+import type { ServerWebSocket } from 'elysia/ws/bun'
+import { createWebSocketAdapter, type NodeWebSocketContext } from './ws'
+
+import {
+	mapCompactResponse,
+	mapEarlyResponse,
+	mapResponse,
+	createStaticHandler
+} from './handle'
 
 export const node = () => {
+	const ws = createWebSocketAdapter()
+
 	return {
 		...WebStandardAdapter,
-		name: 'node',
+		name: '@elysiajs/node',
+		handler: {
+			mapCompactResponse,
+			mapEarlyResponse,
+			mapResponse,
+			createStaticHandler
+		},
+		ws: ws.handler,
 		listen(app) {
 			return (options, callback) => {
 				if (typeof options === 'string') {
@@ -19,113 +50,145 @@ export const node = () => {
 					options = parseInt(options)
 				}
 
-				const { promise: serverInfo, resolve: setServerInfo } =
-					Promise.withResolvers<Server>()
+				const websocket = defineHooks({
+					async upgrade(request) {
+						// @ts-ignore
+						const id = (request.wsId = randomId())
 
-				app.server = serverInfo
+						const response = await app.handle(request)
 
-				const serverOptions: any =
+						const context = ws.context[id]
+						if (!context) return response
+
+						return {
+							context: context as any,
+							headers: context.data.set.headers as any
+						}
+					},
+					open(ws) {
+						const context =
+							ws.context as any as NodeWebSocketContext
+
+						context.open(ws)
+					},
+					message(ws, message) {
+						const context =
+							ws.context as any as NodeWebSocketContext
+
+						// ws is parsed in context.open
+						context.message(
+							ws as any as ServerWebSocket,
+							message.text()
+						)
+					},
+					close(ws, detail) {
+						const context =
+							ws.context as any as NodeWebSocketContext
+
+						context.close(
+							// ws is parsed in context.open
+							ws as any as ServerWebSocket,
+							detail.code!,
+							detail.reason!
+						)
+					},
+					error(ws, error) {
+						const context =
+							ws.context as any as NodeWebSocketContext
+
+						// ws is parsed in context.open
+						context.error?.(ws as any as ServerWebSocket, error)
+					}
+				})
+
+				const serverOptions: Parameters<typeof serve>[0] =
 					typeof options === 'number'
 						? {
 								port: options,
+								silent: true,
+								websocket,
 								fetch: app.fetch
 							}
 						: {
 								...options,
-								// @ts-ignore
-								host: options?.hostname
+								silent: true,
+								websocket,
+								fetch: app.fetch
 							}
 
-				let server = serve(serverOptions, () => {
-					const address = server.address()
-					const hostname =
-						typeof address === 'string'
-							? address
-							: address
-								? address.address
-								: 'localhost'
-
-					const port =
-						typeof address === 'string' ? 0 : (address?.port ?? 0)
-
-					const serverInfo: Server = {
-						...server,
-						id: randomId(),
-						development: process.env.NODE_ENV !== 'production',
-						fetch: app.fetch,
-						hostname,
-						get pendingRequests() {
-							const { promise, resolve, reject } =
-								Promise.withResolvers<number>()
-
-							server.getConnections((error, total) => {
-								if (error) reject(error)
-
-								resolve(total)
-							})
-
-							return promise
-						},
-						get pendingWebSockets() {
-							return 0
-						},
-						port,
-						publish() {
-							throw new Error(
-								"This adapter doesn't support uWebSocket Publish method"
-							)
-						},
-						ref() {
-							server.ref()
-						},
-						unref() {
-							server.unref()
-						},
-						reload() {
-							server.close(() => {
-								server = serve(serverOptions)
-							})
-						},
-						requestIP() {
-							throw new Error(
-								"This adapter doesn't support Bun requestIP method"
-							)
-						},
-						stop() {
-							server.close()
-						},
-						upgrade() {
-							throw new Error(
-								"This adapter doesn't support Web Standard Upgrade method"
-							)
-						},
-						url: new URL(
-							`http://${hostname === '::' ? 'localhost' : hostname}:${port}`
-						),
-						[Symbol.dispose]() {
-							server.close()
-						},
-						raw: server
-					} satisfies Server
-
-					setServerInfo(serverInfo)
-
-					if (callback) callback(serverInfo)
-
-					app.modules.then(() => {
-						try {
-							serverInfo.reload(
-								typeof options === 'object'
-									? (options as any)
-									: {
-											port: options
-										}
-							)
-						} catch {}
-					})
-				})
+				let server = serve(serverOptions)
+				const nodeServer = server.node?.server as
+					| NodeServer<typeof IncomingMessage, typeof ServerResponse>
+					| Http2Server<
+							typeof IncomingMessage,
+							typeof ServerResponse,
+							typeof Http2ServerRequest,
+							typeof Http2ServerResponse
+					  >
+					| undefined
 
 				// @ts-ignore
+				const hostname = server.serveOptions.host ?? 'localhost'
+				const port = server.options.port
+
+				const serverInfo: Server = {
+					...server,
+					id: randomId(),
+					development: process.env.NODE_ENV !== 'production',
+					fetch: app.fetch,
+					hostname,
+					get pendingRequests() {
+						const { promise, resolve, reject } =
+							Promise.withResolvers<number>()
+
+						nodeServer?.getConnections((error, total) => {
+							if (error) reject(error)
+
+							resolve(total)
+						})
+
+						return promise
+					},
+					get pendingWebSockets() {
+						return 0
+					},
+					port,
+					publish() {},
+					ref() {
+						nodeServer?.ref()
+					},
+					unref() {
+						nodeServer?.unref()
+					},
+					reload() {
+						nodeServer?.close()
+						server = serve(serverOptions)
+					},
+					requestIP() {
+						throw new Error(
+							"This adapter doesn't support Bun requestIP method"
+						)
+					},
+					stop() {
+						server.close()
+					},
+					upgrade() {
+						throw new Error(
+							"This adapter doesn't support Web Standard Upgrade method"
+						)
+					},
+					url: new URL(
+						`http://${hostname === '::' ? 'localhost' : hostname}:${port}`
+					),
+					[Symbol.dispose]() {
+						server.close()
+					},
+					raw: server
+				} satisfies Server
+
+				if (callback) callback(serverInfo)
+
+				// @ts-ignore private property
 				app.router.http.build?.()
 
 				if (app.event.start)
