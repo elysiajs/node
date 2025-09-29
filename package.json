@@ -1,6 +1,6 @@
 {
 	"name": "@elysiajs/node",
-	"version": "1.3.0",
+	"version": "1.4.1-beta.0",
 	"description": "Plugin for Elysia for retreiving Bearer token",
 	"license": "MIT",
 	"scripts": {
@@ -11,18 +11,17 @@
 		"release": "npm run build && npm run test && npm publish --access public"
 	},
 	"dependencies": {
-		"@hono/node-server": "^1.14.4",
 		"crossws": "^0.4.1",
-		"srvx": "^0.8.2"
+		"srvx": "^0.8.9"
 	},
 	"peerDependencies": {
-		"elysia": ">= 1.3.5"
+		"elysia": ">= 1.4.0"
 	},
 	"devDependencies": {
-		"@elysiajs/cors": "^1.3.0",
-		"@elysiajs/swagger": "^1.3.0",
+		"@elysiajs/cors": "^1.4.0",
+		"@elysiajs/openapi": "^1.4.0",
 		"@types/node": "^22.10.2",
-		"elysia": "^1.3.7",
+		"elysia": "^1.4.9",
 		"eslint": "9.17.0",
 		"tsup": "^8.3.5",
 		"tsx": "^4.19.2",

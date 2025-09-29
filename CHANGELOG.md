@@ -1,10 +1,20 @@
-# 1.3.1
+# 1.4.1 - 16 Sep 2025
 Change:
-- use srvx, crossws
+- use srvx for full Web Standard Compatibility
+- remove `@hono/node-server`
 
 Improvement:
-- support full WebSocket
+- support full WebSocket via crossws
 - support `ElysiaFile` `content-type`, and `content-range`
+
+# 1.4.0 - 13 Sep 2025
+Improvement:
+- support Elysia 1.4
+
+# 1.3.1 - 24 Aug 2025
+Change:
+- update `@hono/node-server` to 1.19.0
+- minimum support for Elysia is set to 1.3.18
 
 # 1.3.0 - 27 May 2025
 Change:
