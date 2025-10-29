@@ -115,7 +115,7 @@ export const mapResponse = (
 				return new Response(response as ReadableStream, set as any)
 
 			case undefined:
-				if (!response) return new Response('', set as any)
+				if (!response) return new Response(null, set as any)
 
 				return new Response(JSON.stringify(response), set as any)
 
