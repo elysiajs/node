@@ -15,18 +15,17 @@ const app = new Elysia({
 		},
 		message(ws, message) {
 			ws.send(message)
-		},
-		close(ws, code, reason) {}
+		}
 	})
 	.get('/image', async () => file('test/kyuukurarin.mp4'))
 	.get('/generator', async function* () {
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 10000; i++) {
 			await new Promise((resolve) => setTimeout(resolve, 10))
-			yield sse('A')
+			yield 'A'
 		}
 	})
 	.post('/', ({ body }) => body, {
-		type: 'json'
+		parse: 'json'
 	})
 	.get('/', ({ request }) => {
 		console.log(request)

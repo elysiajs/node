@@ -55,13 +55,13 @@ export function createWebSocketAdapter() {
 			normalize: app.config.normalize
 		})
 
-		const toServerWebSocket = (peer: Peer) => {
+		const toServerWebSocket = (peer: Peer, context: Context) => {
 			const ws = peer as any as ServerWebSocket<any>
 
 			// @ts-ignore, context.context is intentional
 			// first context is srvx.context (alias of bun.ws.data)
 			// second context is Elysia context
-			ws.data = peer.context.context
+			ws.data = context
 			ws.sendText = ws.send
 			ws.sendBinary = ws.send
 			ws.publishText = ws.publish
@@ -164,7 +164,7 @@ export function createWebSocketAdapter() {
 						return options.pong?.(data) as number
 					},
 					async open(_ws) {
-						const ws = toServerWebSocket(_ws)
+						const ws = toServerWebSocket(_ws, context)
 
 						try {
 							await handleResponse(

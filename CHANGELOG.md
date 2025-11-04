@@ -1,3 +1,8 @@
+# 1.4.2 - 4 Nov 2025
+Bug fix:
+- [#52](https://github.com/elysiajs/node/pull/52) incorrectly constructed responses for 204 status codes
+- [#50](https://github.com/elysiajs/node/issues/50) websockets ws.data is `undefined`
+
 # 1.4.1 - 16 Sep 2025
 Change:
 - use srvx for full Web Standard Compatibility
