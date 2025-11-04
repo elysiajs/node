@@ -157,11 +157,11 @@ export function createWebSocketAdapter() {
 				store[id] = {
 					data: context,
 					validateResponse,
-					ping(data?: unknown) {
-						return options.ping?.(data) as number
+					ping(ws, data?: unknown) {
+						return options.ping?.(ws as any, data) as number
 					},
-					pong(data?: unknown) {
-						return options.pong?.(data) as number
+					pong(ws, data?: unknown) {
+						return options.pong?.(ws as any, data) as number
 					},
 					async open(_ws) {
 						const ws = toServerWebSocket(_ws, context)

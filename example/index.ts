@@ -1,6 +1,6 @@
 import { Elysia, file, sse } from 'elysia'
 import { cors } from '@elysiajs/cors'
-import { openapi } from '@elysiajs/openapi'
+import { fromTypes, openapi } from '@elysiajs/openapi'
 
 import { node } from '../src'
 
@@ -27,11 +27,7 @@ const app = new Elysia({
 	.post('/', ({ body }) => body, {
 		parse: 'json'
 	})
-	.get('/', ({ request }) => {
-		console.log(request)
-
-		return 'ok'
-	})
+	.get('/', () => 'ok')
 	.listen(3000)
 
 // console.log(app.fetch.toString())
