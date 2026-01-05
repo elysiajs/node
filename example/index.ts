@@ -7,10 +7,17 @@ import { node } from '../src'
 const app = new Elysia({
 	adapter: node()
 })
-	.use(cors())
+
+app.use(cors())
 	.use(openapi())
+	.get('/redirect', ({ cookie, redirect }) => {
+		cookie.a.value = 'cookie value'
+
+		return redirect('https://example.com')
+	})
 	.ws('/ws/:id', {
 		open({ data, subscribe, isSubscribed }) {
+			console.log(data)
 			subscribe('welcome')
 		},
 		message(ws, message) {
@@ -29,5 +36,3 @@ const app = new Elysia({
 	})
 	.get('/', () => 'ok')
 	.listen(3000)
-
-// console.log(app.fetch.toString())

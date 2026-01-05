@@ -1,3 +1,8 @@
+# 1.4.3 - 5 Jan 2025
+Bug fix:
+- [#54](https://github.com/elysiajs/node/issues/54) update srvx to 0.10.0
+- [#53](https://github.com/elysiajs/node/issues/53) setting cookie and redirecting returns immutable
+
 # 1.4.2 - 4 Nov 2025
 Bug fix:
 - [#52](https://github.com/elysiajs/node/pull/52) incorrectly constructed responses for 204 status codes

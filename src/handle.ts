@@ -3,13 +3,12 @@
 import { FastResponse as Response } from 'srvx'
 
 import {
-	createResponseHandler,
 	createStreamHandler,
 	handleSet,
 	responseToSetHeaders,
 	streamResponse
 } from 'elysia/adapter/utils'
-import { handleFile } from './utils'
+import { handleFile, createResponseHandler } from './utils'
 
 import { ElysiaFile, mime } from 'elysia/universal/file'
 import { isNotEmpty } from 'elysia/utils'

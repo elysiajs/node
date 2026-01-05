@@ -3,6 +3,11 @@ import type { ReadStream } from 'fs'
 
 import { isNotEmpty } from 'elysia/utils'
 import type { Context } from 'elysia/context'
+import {
+	createStreamHandler,
+	responseToSetHeaders,
+	streamResponse
+} from 'elysia/adapter/utils'
 
 export const handleFile = (
 	response: ReadStream | File | Blob,
@@ -68,4 +73,41 @@ export const handleFile = (
 		status: set.status as number,
 		headers: defaultHeader
 	})
+}
+
+interface CreateHandlerParameter {
+	mapResponse(
+		response: unknown,
+		set: Context['set'],
+		request?: Request
+	): Response
+	mapCompactResponse(response: unknown, request?: Request): Response
+}
+
+export const createResponseHandler = (handler: CreateHandlerParameter) => {
+	const handleStream = createStreamHandler(handler)
+
+	return (response: Response, set: Context['set'], request?: Request) => {
+		const newResponse = new Response(response.body, {
+			headers: Object.assign(
+				// @ts-ignore
+				Object.fromEntries(response.headers.entries()),
+				set.headers
+			),
+			status: response.status ?? set.status
+		})
+
+		if (
+			!(newResponse as Response).headers.has('content-length') &&
+			(newResponse as Response).headers.get('transfer-encoding') ===
+				'chunked'
+		)
+			return handleStream(
+				streamResponse(newResponse as Response),
+				responseToSetHeaders(newResponse as Response, set),
+				request
+			) as any
+
+		return newResponse
+	}
 }
