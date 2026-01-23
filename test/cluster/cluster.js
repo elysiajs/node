@@ -57,16 +57,16 @@ if (cluster.isPrimary) {
 		return pid
 	})
 	const result = await Promise.all(promises)
-
+	const pidsCount = new Set(result).size;
 	if (arg2 === 'false') {
-		if (new Set(result).size != 1) {
+		if (pidsCount != 1) {
 			console.error('❌ Server should return 1 pid.')
 			shutdown(workers, 1)
 		}
 		console.log('✅ Test exclusive mode succeed!')
 		shutdown(workers, 0)
 	}
-	if (new Set(result).size != workersAmount) {
+	if (pidsCount != workersAmount) {
 		console.error("❌ Clustering error, number of pids doesn't match.")
 		shutdown(workers, 1)
 	}
