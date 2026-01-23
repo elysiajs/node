@@ -31,7 +31,7 @@ function shutdown(workers, code) {
 	workers.forEach((it) => {
 		it.kill()
 	})
-	exit(0)
+	exit(code)
 }
 
 if (cluster.isPrimary) {
