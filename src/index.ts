@@ -107,9 +107,11 @@ export const node = () => {
 								port: options,
 								silent: true,
 								websocket,
-								fetch: app.fetch
+								fetch: app.fetch,
+								reusePort: true
 							}
 						: {
+								reusePort: true,
 								...options,
 								silent: true,
 								websocket,
