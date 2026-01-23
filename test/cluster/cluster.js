@@ -5,6 +5,8 @@ import { node } from '@elysiajs/node'
 
 const workersAmount = 5
 const port = 3000
+// Use args to differentiate paramater
+// So code is more compact
 const arg2 = process.argv[2]
 let parameter
 if (arg2 === 'port') {
@@ -44,9 +46,10 @@ if (cluster.isPrimary) {
 		}, 2000)
 	})
 	await delayPromise
-	//Make n API calls, we should receive n different PIDs back
+
+	// Make n API calls, we should receive n different PIDs back
 	// Checking if a server is run can only be done this way at the moment
-	// because error is deep in srvx
+	// because error is really deep in srvx and async
 	// Even callback in Elysia.listen will be still be run even on error
 	const promises = workers.map(async (it) => {
 		const result = await fetch(`http://localhost:${port}`)
