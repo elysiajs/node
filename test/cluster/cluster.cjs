@@ -25,6 +25,9 @@ if (arg2 === 'port') {
 		port,
 		reusePort: false
 	}
+} else {
+	console.error(`Unknown argument: ${arg2}. Expected: port, object, true, false`)
+	exit(1)
 }
 
 /**
