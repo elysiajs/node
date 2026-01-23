@@ -1,7 +1,7 @@
-import cluster from 'node:cluster'
-import { Elysia } from 'elysia'
-import { exit, pid } from 'node:process'
-import { node } from '@elysiajs/node'
+const cluster = require('node:cluster')
+const { Elysia } = require('elysia')
+const { exit, pid } = require('node:process')
+const { node } = require('@elysiajs/node')
 
 const workersAmount = 5
 const port = 3000
@@ -34,7 +34,8 @@ function shutdown(workers, code) {
 	exit(code)
 }
 
-if (cluster.isPrimary) {
+
+async function startPrimary() {
 	let workers = []
 	for (let i = 0; i < workersAmount; i++) {
 		workers.push(cluster.fork())
@@ -72,6 +73,10 @@ if (cluster.isPrimary) {
 	}
 	console.log('✅ Test cluster mode succeed!')
 	shutdown(workers, 0)
+}
+
+if (cluster.isPrimary) {
+	startPrimary()
 } else {
 	new Elysia({ adapter: node() }).get(`/`, pid).listen(parameter)
 }
