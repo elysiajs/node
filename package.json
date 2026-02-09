@@ -5,8 +5,9 @@
 	"license": "MIT",
 	"scripts": {
 		"dev": "tsx --watch ./example/index.ts",
-		"test": "bun run test:node",
+		"test": "bun run test:node && bun run test:node-cluster",
 		"test:node": "npm install --prefix ./test/node/cjs/ && npm install --prefix ./test/node/esm/ && node ./test/node/cjs/index.js && node ./test/node/esm/index.js",
+		"test:node-cluster": "node ./test/cluster/cluster.cjs port && node ./test/cluster/cluster.cjs object && node ./test/cluster/cluster.cjs true && node ./test/cluster/cluster.cjs false",
 		"build": "bun build.ts",
 		"release": "npm run build && npm run test && npm publish --access public"
 	},
