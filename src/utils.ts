@@ -1,7 +1,7 @@
 import { FastResponse as Response } from 'srvx'
 import type { ReadStream } from 'fs'
 
-import { isNotEmpty } from 'elysia/utils'
+import { isNotEmpty, StatusMap } from 'elysia/utils'
 import type { Context } from 'elysia/context'
 import {
 	createStreamHandler,
@@ -84,17 +84,57 @@ interface CreateHandlerParameter {
 	mapCompactResponse(response: unknown, request?: Request): Response
 }
 
+// Merge header by allocating a new one
+// In Bun, response.headers can be mutable
+// while in Node and Cloudflare Worker is not
+// default to creating a new one instead
+export function mergeHeaders(
+	responseHeaders: Headers,
+	setHeaders: Context['set']['headers']
+) {
+	// @ts-ignore
+	const headers = new Headers(Object.fromEntries(responseHeaders.entries()))
+
+	// Merge headers: Response headers take precedence, set.headers fill in non-conflicting ones
+	if (setHeaders instanceof Headers)
+		// @ts-ignore
+		for (const key of setHeaders.keys()) {
+			if (key === 'set-cookie') {
+				if (headers.has('set-cookie')) continue
+
+				for (const cookie of setHeaders.getSetCookie())
+					headers.append('set-cookie', cookie)
+			} else if (!responseHeaders.has(key))
+				headers.set(key, setHeaders?.get(key) ?? '')
+		}
+	else
+		for (const key in setHeaders)
+			if (key === 'set-cookie')
+				headers.append(key, setHeaders[key] as any)
+			else if (!responseHeaders.has(key))
+				headers.set(key, setHeaders[key] as any)
+
+	return headers
+}
+
+export function mergeStatus(
+	responseStatus: number,
+	setStatus: Context['set']['status']
+) {
+	if (typeof setStatus === 'string') setStatus = StatusMap[setStatus]
+
+	if (responseStatus === 200) return setStatus
+
+	return responseStatus
+}
+
 export const createResponseHandler = (handler: CreateHandlerParameter) => {
 	const handleStream = createStreamHandler(handler)
 
 	return (response: Response, set: Context['set'], request?: Request) => {
 		const newResponse = new Response(response.body, {
-			headers: Object.assign(
-				// @ts-ignore
-				Object.fromEntries(response.headers.entries()),
-				set.headers
-			),
-			status: response.status ?? set.status
+			headers: mergeHeaders(response.headers, set.headers),
+			status: mergeStatus(response.status, set.status)
 		})
 
 		if (
@@ -105,7 +145,9 @@ export const createResponseHandler = (handler: CreateHandlerParameter) => {
 			return handleStream(
 				streamResponse(newResponse as Response),
 				responseToSetHeaders(newResponse as Response, set),
-				request
+				request,
+				// @ts-ignore
+				true // don't auto-format SSE for pre-formatted Response
 			) as any
 
 		return newResponse

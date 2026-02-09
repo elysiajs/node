@@ -1,6 +1,6 @@
 {
 	"name": "@elysiajs/node",
-	"version": "1.4.3",
+	"version": "1.4.4",
 	"description": "Elysia adapter to run Elysia on Node.js",
 	"license": "MIT",
 	"scripts": {
@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"crossws": "^0.4.1",
-		"srvx": "^0.10.0"
+		"srvx": "^0.11.2"
 	},
 	"peerDependencies": {
 		"elysia": ">= 1.4.0"

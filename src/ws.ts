@@ -1,4 +1,4 @@
-import { Peer, WSError } from 'crossws'
+import { defineHooks, Peer, WSError } from 'crossws'
 import {
 	Context,
 	getSchemaValidator,
@@ -249,5 +249,51 @@ export function createWebSocketAdapter() {
 		)
 	}
 
-	return { handler, context: store }
+	function createConfig(app: AnyElysia) {
+		return defineHooks({
+			async upgrade(request) {
+				// @ts-ignore
+				const id = (request.wsId = randomId())
+
+				const response = await app.handle(request)
+
+				const context = store[id]
+				if (!context) return response
+
+				return {
+					context: context as any,
+					headers: context.data.set.headers as any
+				}
+			},
+			open(ws) {
+				const context = ws.context as any as NodeWebSocketContext
+
+				context.open(ws)
+			},
+			message(ws, message) {
+				const context = ws.context as any as NodeWebSocketContext
+
+				// ws is parsed in context.open
+				context.message(ws as any as ServerWebSocket, message.text())
+			},
+			close(ws, detail) {
+				const context = ws.context as any as NodeWebSocketContext
+
+				context.close(
+					// ws is parsed in context.open
+					ws as any as ServerWebSocket,
+					detail.code!,
+					detail.reason!
+				)
+			},
+			error(ws, error) {
+				const context = ws.context as any as NodeWebSocketContext
+
+				// ws is parsed in context.open
+				context.error?.(ws as any as ServerWebSocket, error)
+			}
+		})
+	}
+
+	return { handler, createConfig, context: store }
 }

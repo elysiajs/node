@@ -15,10 +15,8 @@ import { WebStandardAdapter } from 'elysia/adapter/web-standard'
 import type { Server } from 'elysia/universal'
 import { isNumericString, randomId } from 'elysia/utils'
 
-import { defineHooks } from 'crossws'
 import { serve } from 'crossws/server'
 
-import type { ServerWebSocket } from 'elysia/ws/bun'
 import { createWebSocketAdapter, type NodeWebSocketContext } from './ws'
 
 import {
@@ -50,71 +48,20 @@ export const node = () => {
 					options = parseInt(options)
 				}
 
-				const websocket = defineHooks({
-					async upgrade(request) {
-						// @ts-ignore
-						const id = (request.wsId = randomId())
-
-						const response = await app.handle(request)
-
-						const context = ws.context[id]
-						if (!context) return response
-
-						return {
-							context: context as any,
-							headers: context.data.set.headers as any
-						}
-					},
-					open(ws) {
-						const context =
-							ws.context as any as NodeWebSocketContext
-
-						context.open(ws)
-					},
-					message(ws, message) {
-						const context =
-							ws.context as any as NodeWebSocketContext
-
-						// ws is parsed in context.open
-						context.message(
-							ws as any as ServerWebSocket,
-							message.text()
-						)
-					},
-					close(ws, detail) {
-						const context =
-							ws.context as any as NodeWebSocketContext
-
-						context.close(
-							// ws is parsed in context.open
-							ws as any as ServerWebSocket,
-							detail.code!,
-							detail.reason!
-						)
-					},
-					error(ws, error) {
-						const context =
-							ws.context as any as NodeWebSocketContext
-
-						// ws is parsed in context.open
-						context.error?.(ws as any as ServerWebSocket, error)
-					}
-				})
-
 				const serverOptions: Parameters<typeof serve>[0] =
 					typeof options === 'number'
-						? {
+						? ({
 								port: options,
 								silent: true,
-								websocket,
+								websocket: ws.createConfig(app),
 								fetch: app.fetch,
 								reusePort: true
-							}
+							} as any)
 						: {
 								reusePort: true,
 								...options,
 								silent: true,
-								websocket,
+								websocket: ws.createConfig(app),
 								fetch: app.fetch
 							}
 
@@ -149,13 +96,15 @@ export const node = () => {
 							resolve(total)
 						})
 
-						return promise
+						return promise as any
 					},
 					get pendingWebSockets() {
 						return 0
 					},
-					port,
-					publish() {},
+					port: port as any,
+					publish() {
+						return 0
+					},
 					ref() {
 						nodeServer?.ref()
 					},
@@ -165,6 +114,8 @@ export const node = () => {
 					reload() {
 						nodeServer?.close()
 						server = serve(serverOptions)
+
+						return serverInfo
 					},
 					requestIP() {
 						throw new Error(
@@ -172,7 +123,7 @@ export const node = () => {
 						)
 					},
 					stop() {
-						server.close()
+						return server.close()
 					},
 					upgrade() {
 						throw new Error(
@@ -185,6 +136,7 @@ export const node = () => {
 					[Symbol.dispose]() {
 						server.close()
 					},
+					// @ts-ignore
 					raw: server
 				} satisfies Server
 
