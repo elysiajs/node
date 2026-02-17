@@ -1,4 +1,4 @@
-# 1.4.10 - 17 Feb 2026
+# 1.4.5 - 17 Feb 2026
 Bug fix:
 - request.wsId is undefined when using WebSocket
 

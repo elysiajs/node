@@ -1,6 +1,6 @@
 {
 	"name": "@elysiajs/node",
-	"version": "1.4.4",
+	"version": "1.4.5",
 	"description": "Elysia adapter to run Elysia on Node.js",
 	"license": "MIT",
 	"scripts": {
