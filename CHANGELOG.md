@@ -1,10 +1,14 @@
-# 1.4.4 - 9 Feb 2025
+# 1.4.10 - 17 Feb 2026
+Bug fix:
+- request.wsId is undefined when using WebSocket
+
+# 1.4.4 - 9 Feb 2026
 Bug fix:
 - [#55](https://github.com/elysiajs/node/pull/55) allow node cluster mode as default
 - createResponseHandler with more precision headers merging
 - simplify ws hook
 
-# 1.4.3 - 5 Jan 2025
+# 1.4.3 - 5 Jan 2026
 Bug fix:
 - [#54](https://github.com/elysiajs/node/issues/54) update srvx to 0.10.0
 - [#53](https://github.com/elysiajs/node/issues/53) setting cookie and redirecting returns immutable

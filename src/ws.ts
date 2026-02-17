@@ -8,7 +8,7 @@ import {
 } from 'elysia'
 import { parseSetCookies } from 'elysia/adapter/utils'
 import { ElysiaTypeCheck } from 'elysia/schema'
-import { isNotEmpty } from 'elysia/utils'
+import { isNotEmpty, randomId } from 'elysia/utils'
 import {
 	createHandleWSResponse,
 	createWSMessageParser,
