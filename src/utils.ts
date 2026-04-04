@@ -92,8 +92,15 @@ export function mergeHeaders(
 	responseHeaders: Headers,
 	setHeaders: Context['set']['headers']
 ) {
-	// @ts-ignore
-	const headers = new Headers(Object.fromEntries(responseHeaders.entries()))
+	const headers = new Headers()
+
+	for (const [key, value] of responseHeaders.entries()) {
+		if (key === 'set-cookie') continue
+		headers.append(key, value)
+	}
+
+	for (const cookie of responseHeaders.getSetCookie())
+		headers.append('set-cookie', cookie)
 
 	// Merge headers: Response headers take precedence, set.headers fill in non-conflicting ones
 	if (setHeaders instanceof Headers)
