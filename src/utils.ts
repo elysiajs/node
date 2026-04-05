@@ -99,35 +99,43 @@ export function mergeHeaders(
 		headers.append(key, value)
 	}
 
-	for (const cookie of responseHeaders.getSetCookie())
+	for (const cookie of responseHeaders.getSetCookie()) {
 		headers.append('set-cookie', cookie)
+	}
 
 	// Merge headers: Response headers take precedence, set.headers fill in non-conflicting ones
-	if (setHeaders instanceof Headers)
+	if (setHeaders instanceof Headers) {
 		// @ts-ignore
 		for (const key of setHeaders.keys()) {
 			if (key === 'set-cookie') {
 				if (headers.has('set-cookie')) continue
 
-				for (const cookie of setHeaders.getSetCookie())
+				for (const cookie of setHeaders.getSetCookie()) {
 					headers.append('set-cookie', cookie)
-			} else if (!responseHeaders.has(key))
+				}
+			} else if (!responseHeaders.has(key)) {
 				headers.set(key, setHeaders?.get(key) ?? '')
+			}
 		}
-	else
-		for (const key in setHeaders)
+	} else {
+		for (const key in setHeaders) {
 			if (key === 'set-cookie') {
 				if (headers.has('set-cookie')) continue
 
 				const cookies = setHeaders[key]
 
-				if (Array.isArray(cookies))
-					for (const cookie of cookies)
+				if (Array.isArray(cookies)) {
+					for (const cookie of cookies) {
 						headers.append('set-cookie', cookie)
-				else headers.append('set-cookie', cookies as string)
-			}
-			else if (!responseHeaders.has(key))
+					}
+				} else {
+					headers.append('set-cookie', cookies as string)
+				}
+			} else if (!responseHeaders.has(key)) {
 				headers.set(key, setHeaders[key] as any)
+			}
+		}
+	}
 
 	return headers
 }
