@@ -116,8 +116,16 @@ export function mergeHeaders(
 		}
 	else
 		for (const key in setHeaders)
-			if (key === 'set-cookie')
-				headers.append(key, setHeaders[key] as any)
+			if (key === 'set-cookie') {
+				if (headers.has('set-cookie')) continue
+
+				const cookies = setHeaders[key]
+
+				if (Array.isArray(cookies))
+					for (const cookie of cookies)
+						headers.append('set-cookie', cookie)
+				else headers.append('set-cookie', cookies as string)
+			}
 			else if (!responseHeaders.has(key))
 				headers.set(key, setHeaders[key] as any)
 
