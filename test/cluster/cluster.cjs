@@ -1,7 +1,7 @@
 const cluster = require('node:cluster')
 const { Elysia } = require('elysia')
 const { exit, pid } = require('node:process')
-const { node } = require('@elysiajs/node')
+const { node } = require('@elysia/node')
 
 const workersAmount = 5
 const port = 3000
@@ -31,7 +31,7 @@ if (arg2 === 'port') {
 }
 
 /**
- * Method to stop workers and then exit the current program 
+ * Method to stop workers and then exit the current program
  * @param {Worker[]} workers list of workers
  * @param {number} code exit code
  */

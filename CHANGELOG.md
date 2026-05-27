@@ -1,3 +1,7 @@
+# 1.4.6 - 20 May 2026
+Bug fix:
+- use @elysia namespace
+
 # 1.4.5 - 17 Feb 2026
 Bug fix:
 - request.wsId is undefined when using WebSocket
