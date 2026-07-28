@@ -1,3 +1,5 @@
+import { FastResponse as Response } from 'srvx'
+
 import {
 	createResponseHandler,
 	createStreamHandler,
@@ -5,7 +7,6 @@ import {
 	handleSet,
 	materializeSetHeaders
 } from 'elysia/adapter/utils'
-
 import { ElysiaFile, mime } from 'elysia/universal/file'
 import { formToFormData, isNotEmpty, nullObject } from 'elysia/utils'
 import {
@@ -216,8 +217,6 @@ export function mapResponse(
 	return mapCompactResponse(response, request, owned)
 }
 
-const textHeaders = textPlainInit
-
 export function mapCompactResponse(
 	response: unknown,
 	request?: Request,
@@ -225,7 +224,7 @@ export function mapCompactResponse(
 ): Response {
 	switch (response?.constructor?.name) {
 		case 'String':
-			return new Response(response as string, textHeaders)
+			return new Response(response as string, textPlainInit)
 
 		case 'Array':
 			return Response.json(response)
