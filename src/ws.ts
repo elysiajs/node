@@ -1,8 +1,7 @@
 import { defineHooks, type Message, type Peer } from 'crossws'
-import type { AnyElysia } from 'elysia/base'
 
-import { buildGlobalWSHandler } from 'elysia/ws'
-import type { ServerWebSocket } from 'elysia/ws'
+import type { AnyElysia } from 'elysia/base'
+import { buildGlobalWSHandler, type ServerWebSocket } from 'elysia/ws'
 
 export interface WSUpgradeData {
 	headers?: Record<string, any>

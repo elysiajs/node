@@ -1,15 +1,16 @@
 import { Elysia, file, sse } from 'elysia'
 
-import { node } from '../src'
+import { node } from '../src/websocket'
+import { websocket } from 'elysia/websocket'
 
-const subapp = new Elysia({ adapter: node() }).ws('/', function* () {
-	yield "OK"
+const subapp = new Elysia().use(websocket()).ws('/', function* () {
+	yield 'OK'
 	yield 'Hello WebSocket'
 })
 
-const app = new Elysia({
+new Elysia({
 	adapter: node()
 })
-	.get('/', 'ok')
+	.get('/', () => 'ok')
 	.use(subapp)
 	.listen(3000)
