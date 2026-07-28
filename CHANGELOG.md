@@ -5,9 +5,6 @@ Improvement:
 Breaking Change:
 - separate between base HTTP and WebSocket server, use `@elysia/node/websocket` for WebSocket server instead
 
-Change:
-- remove `reusePort` by default
-
 # 1.4.6 - 20 May 2026
 Bug fix:
 - use @elysia namespace

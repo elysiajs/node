@@ -26,8 +26,16 @@ if (arg2 === 'port') {
 		reusePort: false
 	}
 } else {
-	console.error(`Unknown argument: ${arg2}. Expected: port, object, true, false`)
+	console.error(
+		`Unknown argument: ${arg2}. Expected: port, object, true, false`
+	)
 	exit(1)
+}
+
+if (arg2 === 'true' && process.platform !== 'linux') {
+	// ponytail: test native reusePort on Linux; extend when CI covers another supported OS
+	console.log(`⏭️ reusePort is not supported on ${process.platform}`)
+	exit(0)
 }
 
 /**
@@ -65,7 +73,7 @@ async function startPrimary() {
 		return workerPid
 	})
 	const result = await Promise.all(promises)
-	const pidsCount = new Set(result).size;
+	const pidsCount = new Set(result).size
 	if (arg2 === 'false') {
 		if (pidsCount !== 1) {
 			console.error('❌ Server should return 1 pid.')
@@ -85,5 +93,9 @@ async function startPrimary() {
 if (cluster.isPrimary) {
 	startPrimary()
 } else {
-	new Elysia({ adapter: node() }).get(`/`, pid).listen(parameter)
+	new Elysia({
+		adapter: node()
+	})
+		.get(`/`, pid)
+		.listen(parameter)
 }

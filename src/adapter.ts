@@ -9,10 +9,10 @@ import type {
 	Http2ServerResponse
 } from 'http2'
 
-import { createAdapter, ElysiaAdapterOptions } from 'elysia/adapter'
+import { createAdapter, type ElysiaAdapterOptions } from 'elysia/adapter'
 import { WebStandardAdapter } from 'elysia/adapter/web-standard'
-import type { Server } from 'elysia/universal'
 import { requestId } from 'elysia/utils'
+import type { Server } from 'elysia/universal'
 
 import type { serve as serveHttp } from 'srvx'
 
@@ -51,19 +51,25 @@ export const createNodeAdapter = (
 			}
 
 			const serverOptions: ServerOptions =
-				typeof options === 'number'
-					? ({
-							port: options,
-							silent: true,
-							fetch: app.fetch,
-							...(ws && { websocket: ws.createConfig(app) })
-						} as any)
-					: {
+				typeof options === 'object'
+					? {
 							...options,
+							node: {
+								exclusive: options.reusePort === false,
+								// @ts-expect-error
+								...options.node
+							},
 							silent: true,
 							fetch: app.fetch,
-							...(ws && { websocket: ws.createConfig(app) })
+							websocket: ws ? ws.createConfig(app) : undefined
 						}
+					: ({
+							port: +options,
+							node: { exclusive: false },
+							silent: true,
+							fetch: app.fetch,
+							websocket: ws ? ws.createConfig(app) : undefined
+						} as any)
 
 			const createServer = () => {
 				const server = serve(serverOptions)
