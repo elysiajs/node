@@ -1,66 +1,66 @@
 {
-	"name": "@elysia/node",
-	"version": "2.0.0-exp.3",
-	"description": "Elysia adapter to run Elysia on Node.js",
-	"license": "MIT",
-	"scripts": {
-		"dev": "tsx --watch ./example/index.ts",
-		"test": "bun run test:node && bun run test:node-cluster",
-		"test:node": "npm install --prefix ./test/node/cjs/ && npm install --prefix ./test/node/esm/ && node ./test/node/cjs/index.js && node ./test/node/esm/index.js",
-		"test:node-cluster": "node ./test/cluster/cluster.cjs port && node ./test/cluster/cluster.cjs object && node ./test/cluster/cluster.cjs true && node ./test/cluster/cluster.cjs false",
-		"build": "bun build.ts",
-		"release": "npm run build && npm run test && npm publish --access public"
-	},
-	"dependencies": {
-		"crossws": "^0.4.10",
-		"srvx": "^0.12.4"
-	},
-	"peerDependencies": {
-		"elysia": ">= 2.0.0-exp.59"
-	},
-	"devDependencies": {
-		"@elysia/cors": "^1.4.0",
-		"@elysia/openapi": "^1.4.0",
-		"@eslint/plugin-kit": "^0.7.2",
-		"@types/bun": "^1.3.14",
-		"@types/node": "^22.10.2",
-		"elysia": "2.0.0-exp.59",
-		"eslint": "9.17.0",
-		"tsdown": "^0.22.3",
-		"tsx": "^4.19.2",
-		"typescript": "^6.0.3",
-		"vitest": "^4.1.9"
-	},
-	"main": "./dist/index.js",
-	"module": "./dist/index.mjs",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		"./package.json": "./package.json",
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.mjs",
-			"require": "./dist/index.js"
-		},
-		"./websocket": {
-			"types": "./dist/websocket.d.ts",
-			"import": "./dist/websocket.mjs",
-			"require": "./dist/websocket.js"
-		}
-	},
-	"keywords": [
-		"elysia",
-		"bearer",
-		"authentication"
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/elysiajs/node"
-	},
-	"author": {
-		"name": "saltyAom",
-		"url": "https://github.com/SaltyAom",
-		"email": "saltyaom@gmail.com"
-	},
-	"homepage": "https://github.com/elysiajs/node",
-	"bugs": "https://github.com/elysiajs/node/issues"
+    "name": "@elysia/node",
+    "version": "2.0.0-beta.1",
+    "description": "Elysia adapter to run Elysia on Node.js",
+    "license": "MIT",
+    "scripts": {
+        "dev": "tsx --watch ./example/index.ts",
+        "test": "bun run test:node && bun run test:node-cluster",
+        "test:node": "npm install --prefix ./test/node/cjs/ && npm install --prefix ./test/node/esm/ && node ./test/node/cjs/index.js && node ./test/node/esm/index.js",
+        "test:node-cluster": "node ./test/cluster/cluster.cjs port && node ./test/cluster/cluster.cjs object && node ./test/cluster/cluster.cjs true && node ./test/cluster/cluster.cjs false",
+        "build": "bun build.ts",
+        "release": "npm run build && npm run test && npm publish --access public"
+    },
+    "dependencies": {
+        "crossws": "^0.4.10",
+        "srvx": "^0.12.4"
+    },
+    "peerDependencies": {
+        "elysia": ">= 2.0.0-beta.1"
+    },
+    "devDependencies": {
+        "@elysia/cors": "^1.4.0",
+        "@elysia/openapi": "^1.4.0",
+        "@eslint/plugin-kit": "^0.7.2",
+        "@types/bun": "^1.3.14",
+        "@types/node": "^22.10.2",
+        "elysia": "2.0.0-beta.1",
+        "eslint": "9.17.0",
+        "tsdown": "^0.22.3",
+        "tsx": "^4.19.2",
+        "typescript": "^6.0.3",
+        "vitest": "^4.1.9"
+    },
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        },
+        "./websocket": {
+            "types": "./dist/websocket.d.ts",
+            "import": "./dist/websocket.mjs",
+            "require": "./dist/websocket.js"
+        }
+    },
+    "keywords": [
+        "elysia",
+        "bearer",
+        "authentication"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/elysiajs/node"
+    },
+    "author": {
+        "name": "saltyAom",
+        "url": "https://github.com/SaltyAom",
+        "email": "saltyaom@gmail.com"
+    },
+    "homepage": "https://github.com/elysiajs/node",
+    "bugs": "https://github.com/elysiajs/node/issues"
 }
