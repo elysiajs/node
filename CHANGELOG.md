@@ -1,3 +1,8 @@
+
+# 2.0.0-beta.1 - 30 Jul 2026
+Change:
+- Add support for Elysia 2.0
+
 # 2.0.0
 Improvement:
 - update srvx, crossws

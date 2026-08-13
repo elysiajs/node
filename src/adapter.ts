@@ -130,11 +130,6 @@ export const createNodeAdapter = (
 
 					return serverInfo
 				},
-				requestIP() {
-					throw new Error(
-						"This adapter doesn't support Bun requestIP method"
-					)
-				},
 				stop() {
 					return server.close()
 				},

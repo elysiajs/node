@@ -1,13 +1,14 @@
 import { FastResponse as Response } from 'srvx'
 import type { ReadStream } from 'fs'
 
-import { isNotEmpty, StatusMap } from 'elysia/utils'
-import type { Context } from 'elysia/context'
+import { StatusMap } from 'elysia/constants'
+import { isNotEmpty } from 'elysia/utils'
 import {
 	createStreamHandler,
 	responseToSetHeaders,
 	streamResponse
 } from 'elysia/adapter/utils'
+import type { Context } from 'elysia/context'
 
 export const handleFile = (
 	response: ReadStream | File | Blob,
