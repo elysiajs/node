@@ -25,17 +25,22 @@ export const handleFile = (
 			set.status === 412 ||
 			set.status === 416)
 
-	const defaultHeader = immutable
-		? {
-				'transfer-encoding': 'chunked'
-			}
-		: ({
-				'accept-ranges': 'bytes',
-				'content-range': size
-					? `bytes 0-${size - 1}/${size}`
-					: undefined,
-				'transfer-encoding': 'chunked'
-			} as any)
+	const hasContentLength =
+		set?.headers &&
+		(set.headers instanceof Headers
+			? set.headers.has('content-length')
+			: 'content-length' in set.headers ||
+				'Content-Length' in set.headers)
+
+	const defaultHeader =
+		immutable || (size === undefined && !hasContentLength)
+			? { 'transfer-encoding': 'chunked' }
+			: ({
+					'accept-ranges': 'bytes',
+					'content-range': size
+						? `bytes 0-${size - 1}/${size}`
+						: undefined
+				} as any)
 
 	if (!set && !size) return new Response(response as Blob)
 
