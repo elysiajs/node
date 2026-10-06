@@ -36,8 +36,6 @@ export const createNodeAdapter = (
 	createAdapter({
 		...options,
 		...WebStandardAdapter,
-		name: '@elysia/node',
-		websocket: !!ws,
 		response: {
 			compact: mapCompactResponse,
 			map: mapResponse
