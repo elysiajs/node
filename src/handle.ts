@@ -116,7 +116,7 @@ function mapResponseWithSet(
 			return handleFile(response as Blob, set, request)
 
 		case 'ElysiaStatus':
-			set.status = (response as ElysiaStatus<200>).code
+			set.status = (response as ElysiaStatus<200>).status
 			if ((response as ElysiaStatus<200>).headers)
 				Object.assign(
 					materializeSetHeaders(set),
@@ -178,7 +178,7 @@ export function mapResponse(
 		return mapResponseWithSet(response, set, request, owned)
 
 	if (response instanceof ElysiaStatus) {
-		set.status = (response as ElysiaStatus<200>).code
+		set.status = (response as ElysiaStatus<200>).status
 		if ((response as ElysiaStatus<200>).headers)
 			Object.assign(set.headers, (response as ElysiaStatus<200>).headers)
 
@@ -252,7 +252,7 @@ export function mapCompactResponse(
 			return mapResponse(
 				(response as ElysiaStatus<200>).response,
 				{
-					status: (response as ElysiaStatus<200>).code,
+					status: (response as ElysiaStatus<200>).status,
 					headers: (response as ElysiaStatus<200>).headers
 						? Object.assign(
 								nullObject(),
@@ -349,7 +349,7 @@ function mapFallback(
 
 	if (response instanceof ElysiaStatus) {
 		if (set) {
-			set.status = response.code
+			set.status = response.status
 			if (response.headers)
 				set.headers = { ...set.headers, ...response.headers }
 			return mapResponse(response.response, set, request, owned)
@@ -357,7 +357,7 @@ function mapFallback(
 			return mapResponse(
 				(response as ElysiaStatus<200>).response,
 				{
-					status: (response as ElysiaStatus<200>).code,
+					status: (response as ElysiaStatus<200>).status,
 					headers: response.headers ? { ...response.headers } : {}
 				} as Context['set'],
 				request,
