@@ -130,8 +130,8 @@ export const createNodeAdapter = (
 
 					return serverInfo
 				},
-				stop() {
-					return server.close()
+				stop(closeActiveConnections) {
+					return server.close(closeActiveConnections)
 				},
 				...(ws && {
 					// @ts-ignore — bridges Elysia 2's WS route handler to crossws

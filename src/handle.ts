@@ -46,18 +46,26 @@ function handleElysiaFile(
 	if (stats)
 		return stats.then((stat) => {
 			const size = stat.size as number
+			const status = set.status
+			const immutable =
+				status === 206 ||
+				status === 304 ||
+				status === 412 ||
+				status === 416
 
-			if (
-				size !== undefined &&
-				set.status !== 206 &&
-				set.status !== 304 &&
-				set.status !== 412 &&
-				set.status !== 416
-			) {
+			if (size !== undefined && !immutable)
 				headers['content-length'] = size
+
+			if (request?.headers.get('range'))
+				return handleFile(file, set, request, size)
+
+			if (!immutable) {
+				headers['accept-ranges'] ??= 'bytes'
+				if (size)
+					headers['content-range'] ??= `bytes 0-${size - 1}/${size}`
 			}
 
-			return handleFile(file, set, request, size)
+			return new Response(file.value as any, set as ResponseInit)
 		}) as any
 
 	return handleFile(file.value as any, set, request)

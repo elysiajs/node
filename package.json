@@ -1,6 +1,6 @@
 {
     "name": "@elysia/node",
-    "version": "2.0.0-beta.2",
+    "version": "2.0.0-beta.3",
     "description": "Elysia adapter to run Elysia on Node.js",
     "license": "MIT",
     "scripts": {
@@ -12,8 +12,8 @@
         "release": "npm run build && npm run test && npm publish --access public"
     },
     "dependencies": {
-        "crossws": "^0.4.10",
-        "srvx": "^0.12.4"
+        "crossws": "^0.4.15",
+        "srvx": "^1.0.5"
     },
     "peerDependencies": {
         "elysia": ">= 2.0.0-beta.1"
