@@ -8,7 +8,7 @@ import {
 	materializeSetHeaders
 } from 'elysia/adapter/utils'
 import { ElysiaFile, mime } from 'elysia/universal/file'
-import { formToFormData, isNotEmpty, nullObject } from 'elysia/utils'
+import { formToFormData, isNotEmpty } from 'elysia/utils'
 import {
 	ElysiaStatus,
 	internalServerErrorBody,
@@ -27,7 +27,7 @@ const defaultHeaders = '\0'
 function handleElysiaFile(
 	file: ElysiaFile,
 	set: Context['set'] = {
-		headers: nullObject()
+		headers: {}
 	},
 	request?: Request
 ) {
@@ -124,7 +124,7 @@ function mapResponseWithSet(
 			return handleFile(response as Blob, set, request)
 
 		case 'ElysiaStatus':
-			set.status = (response as ElysiaStatus<200>).code
+			set.status = (response as ElysiaStatus<200>).status
 			if ((response as ElysiaStatus<200>).headers)
 				Object.assign(
 					materializeSetHeaders(set),
@@ -186,7 +186,7 @@ export function mapResponse(
 		return mapResponseWithSet(response, set, request, owned)
 
 	if (response instanceof ElysiaStatus) {
-		set.status = (response as ElysiaStatus<200>).code
+		set.status = (response as ElysiaStatus<200>).status
 		if ((response as ElysiaStatus<200>).headers)
 			Object.assign(set.headers, (response as ElysiaStatus<200>).headers)
 
@@ -260,13 +260,13 @@ export function mapCompactResponse(
 			return mapResponse(
 				(response as ElysiaStatus<200>).response,
 				{
-					status: (response as ElysiaStatus<200>).code,
+					status: (response as ElysiaStatus<200>).status,
 					headers: (response as ElysiaStatus<200>).headers
 						? Object.assign(
-								nullObject(),
-								(response as ElysiaStatus<200>).headers
-							)
-						: nullObject()
+							{},
+							(response as ElysiaStatus<200>).headers
+						)
+						: {}
 				} as Context['set'],
 				request,
 				owned
@@ -307,7 +307,8 @@ export function errorToResponse(
 	owned = false
 ) {
 	if (error?.toResponse) {
-		const targetSet = set ?? ({ headers: nullObject() } as Context['set'])
+		const targetSet =
+			set ?? ({ headers: {} } as Context['set'])
 
 		const apply = (resolved: unknown) => {
 			if (resolved instanceof Response) targetSet.status = resolved.status
@@ -326,10 +327,9 @@ export function errorToResponse(
 	const body = internalServerErrorBody(error)
 	body.status = status
 
-	const headers = (set ? materializeSetHeaders(set) : nullObject()) as Record<
-		string,
-		string
-	>
+	const headers = (
+		set ? materializeSetHeaders(set) : new EmptyObject()
+	) as Record<string, string>
 	headers['content-type'] = PROBLEM_JSON
 
 	return new Response(JSON.stringify(body), { status, headers })
@@ -357,7 +357,7 @@ function mapFallback(
 
 	if (response instanceof ElysiaStatus) {
 		if (set) {
-			set.status = response.code
+			set.status = response.status
 			if (response.headers)
 				set.headers = { ...set.headers, ...response.headers }
 			return mapResponse(response.response, set, request, owned)
@@ -365,7 +365,7 @@ function mapFallback(
 			return mapResponse(
 				(response as ElysiaStatus<200>).response,
 				{
-					status: (response as ElysiaStatus<200>).code,
+					status: (response as ElysiaStatus<200>).status,
 					headers: response.headers ? { ...response.headers } : {}
 				} as Context['set'],
 				request,
