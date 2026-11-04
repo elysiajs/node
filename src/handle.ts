@@ -8,7 +8,7 @@ import {
 	materializeSetHeaders
 } from 'elysia/adapter/utils'
 import { ElysiaFile, mime } from 'elysia/universal/file'
-import { formToFormData, isNotEmpty } from 'elysia/utils'
+import { formToFormData, isElysiaForm, isNotEmpty } from 'elysia/utils'
 import {
 	ElysiaStatus,
 	internalServerErrorBody,
@@ -19,10 +19,62 @@ import type { Context } from 'elysia/context'
 import type { MaybePromise } from 'elysia/types'
 
 const textPlainInit = {
-	headers: { 'content-type': 'text/plain' }
+	headers: [['content-type', 'text/plain']]
+} as unknown as ResponseInit
+
+const jsonInit = {
+	headers: { 'content-type': 'application/json' }
 } as const
 
+function json(response: unknown): Response {
+	const body = JSON.stringify(response)
+	if (body === undefined)
+		throw new TypeError('Value is not JSON serializable')
+
+	return new Response(body, jsonInit)
+}
+
 const defaultHeaders = '\0'
+
+// FastResponse reads init when Node writes the response, so it gets a copy.
+// an afterResponse hook can still change set by then
+function withSet(
+	body: unknown,
+	set?: Context['set'],
+	contentType?: string
+): Response {
+	if (!set) return new Response(body as BodyInit)
+
+	const source = set.headers as unknown
+	let headers: Headers | Record<string, unknown>
+
+	if (source instanceof Headers) {
+		headers = new Headers(source)
+		if (contentType && !headers.get('content-type'))
+			headers.set('content-type', contentType)
+	} else {
+		const copy = (headers = { ...(source as Record<string, unknown>) })
+
+		let hasContentType = !contentType
+		for (const key in copy) {
+			if (!Object.hasOwn(copy, key)) continue
+
+			const value = copy[key]
+			if (Array.isArray(value)) copy[key] = value.slice()
+
+			if (
+				value &&
+				key.length === 12 &&
+				key.toLowerCase() === 'content-type'
+			)
+				hasContentType = true
+		}
+
+		if (!hasContentType) copy['content-type'] = contentType
+	}
+
+	return new Response(body as BodyInit, { ...set, headers } as ResponseInit)
+}
 
 function handleElysiaFile(
 	file: ElysiaFile,
@@ -65,10 +117,23 @@ function handleElysiaFile(
 					headers['content-range'] ??= `bytes 0-${size - 1}/${size}`
 			}
 
-			return new Response(file.value as any, set as ResponseInit)
+			return withSet(file.value, set)
 		}) as any
 
 	return handleFile(file.value as any, set, request)
+}
+
+function responseTag(response: unknown) {
+	if (typeof response === 'string') return 'String'
+	if (response == null) return
+
+	const constructor = Object.getPrototypeOf(response)?.constructor
+	// a generator's constructor is not callable
+	if (typeof constructor !== 'function')
+		// @ts-expect-error
+		return typeof response.next === 'function' ? '' : undefined
+
+	return constructor.name
 }
 
 function mapResponseWithSet(
@@ -78,25 +143,21 @@ function mapResponseWithSet(
 	owned?: boolean
 ): Response {
 	handleSet(set)
-	const headers = set.headers
 
-	switch (response?.constructor?.name) {
+	switch (responseTag(response)) {
 		case 'String':
-			if (!headers['content-type'])
-				materializeSetHeaders(set)['content-type'] = 'text/plain'
-
-			return new Response(response as string, set as ResponseInit)
+			return withSet(response, set, 'text/plain')
 
 		case 'Array':
 			return Response.json(response, set as ResponseInit)
 
-		case 'Object':
-			if ((response as Record<string, unknown>)['~ely-form'])
-				return new Response(
-					formToFormData(response as Record<string, unknown>),
-					set as ResponseInit
-				)
+		case 'ElysiaForm':
+			return withSet(
+				formToFormData(response as Record<string, unknown>),
+				set
+			)
 
+		case 'Object':
 			// @ts-expect-error
 			if (typeof response?.next === 'function')
 				return handleStream(
@@ -111,10 +172,7 @@ function mapResponseWithSet(
 
 		case 'Number':
 		case 'Boolean':
-			return new Response(
-				(response as number | boolean).toString(),
-				set as ResponseInit
-			)
+			return withSet((response as number | boolean).toString(), set)
 
 		case 'ElysiaFile':
 			return handleElysiaFile(response as ElysiaFile, set, request)
@@ -141,7 +199,7 @@ function mapResponseWithSet(
 		case undefined:
 			return response
 				? Response.json(response, set as ResponseInit)
-				: new Response(null, set as ResponseInit)
+				: withSet(null, set)
 
 		case 'Response':
 			return handleResponse(response as Response, set, request, owned)
@@ -163,7 +221,7 @@ function mapResponseWithSet(
 			)
 
 		case 'FormData':
-			return new Response(response as FormData, set as ResponseInit)
+			return withSet(response, set)
 
 		default:
 			return mapFallback(response, set, request, owned) as Response
@@ -230,20 +288,20 @@ export function mapCompactResponse(
 	request?: Request,
 	owned?: boolean
 ): Response {
-	switch (response?.constructor?.name) {
+	switch (responseTag(response)) {
 		case 'String':
 			return new Response(response as string, textPlainInit)
 
 		case 'Array':
-			return Response.json(response)
+			return json(response)
+
+		case 'ElysiaForm':
+			return new Response(
+				formToFormData(response as Record<string, unknown>)
+			)
 
 		case 'Object':
-			if ((response as Record<string, unknown>)['~ely-form'])
-				return new Response(
-					formToFormData(response as Record<string, unknown>)
-				)
-
-			return Response.json(response)
+			return json(response)
 
 		case 'Number':
 		case 'Boolean':
@@ -263,9 +321,9 @@ export function mapCompactResponse(
 					status: (response as ElysiaStatus<200>).status,
 					headers: (response as ElysiaStatus<200>).headers
 						? Object.assign(
-							{},
-							(response as ElysiaStatus<200>).headers
-						)
+								{},
+								(response as ElysiaStatus<200>).headers
+							)
 						: {}
 				} as Context['set'],
 				request,
@@ -273,7 +331,7 @@ export function mapCompactResponse(
 			)
 
 		case undefined:
-			return response ? Response.json(response) : new Response('')
+			return response ? json(response) : new Response('')
 
 		case 'Response':
 			return owned
@@ -307,8 +365,7 @@ export function errorToResponse(
 	owned = false
 ) {
 	if (error?.toResponse) {
-		const targetSet =
-			set ?? ({ headers: {} } as Context['set'])
+		const targetSet = set ?? ({ headers: {} } as Context['set'])
 
 		const apply = (resolved: unknown) => {
 			if (resolved instanceof Response) targetSet.status = resolved.status
@@ -327,9 +384,10 @@ export function errorToResponse(
 	const body = internalServerErrorBody(error)
 	body.status = status
 
-	const headers = (
-		set ? materializeSetHeaders(set) : new EmptyObject()
-	) as Record<string, string>
+	const headers = (set ? materializeSetHeaders(set) : {}) as Record<
+		string,
+		string
+	>
 	headers['content-type'] = PROBLEM_JSON
 
 	return new Response(JSON.stringify(body), { status, headers })
@@ -376,6 +434,9 @@ function mapFallback(
 	if (response instanceof ElysiaFile)
 		return handleElysiaFile(response as ElysiaFile, undefined, request)
 
+	if (isElysiaForm(response))
+		return withSet(formToFormData(response as Record<string, unknown>), set)
+
 	if (
 		// @ts-expect-error
 		typeof response?.next === 'function' ||
@@ -398,7 +459,7 @@ function mapFallback(
 
 	// custom class with an array-like value
 	// eg. Bun.sql`` result
-	if (Array.isArray(response)) return Response.json(response) as any
+	if (Array.isArray(response)) return json(response) as any
 
 	// @ts-expect-error
 	if (typeof response?.toResponse === 'function')
@@ -409,15 +470,12 @@ function mapFallback(
 	// @ts-expect-error
 	if (response?.constructor?.name === 'Cookie' && response.jar)
 		// @ts-expect-error
-		return new Response(response.value, set as ResponseInit)
+		return withSet(response.value, set)
 
-	return new Response(response as any, set as ResponseInit)
+	return withSet(response, set)
 }
 
-const handleResponse = createResponseHandler({
-	mapResponse,
-	mapCompactResponse
-})
+const handleResponse = createResponseHandler()
 
 const handleStream = createStreamHandler({
 	mapResponse,

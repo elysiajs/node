@@ -21,6 +21,7 @@ import type { createWebSocketAdapter } from './ws'
 
 type Serve = typeof serveHttp
 type WebSocketAdapter = ReturnType<typeof createWebSocketAdapter>
+type NodeAdapter = ElysiaAdapterOptions & { name: string; websocket: boolean }
 
 // can't use extends because of the type of `serve` function
 // so we use intersection type instead
@@ -155,4 +156,4 @@ export const createNodeAdapter = (
 			if (onSetup)
 				for (let i = 0; i < onSetup.length; i++) onSetup[i](app)
 		}
-	})
+	} as NodeAdapter) as NodeAdapter
