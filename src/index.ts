@@ -140,6 +140,9 @@ export const node = () => {
 					raw: server
 				} satisfies Server
 
+				// `stop` of the web standard adapter reads `app.server`.
+				app.server = serverInfo
+
 				if (callback) callback(serverInfo)
 
 				// @ts-ignore private property
